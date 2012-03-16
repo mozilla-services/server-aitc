@@ -44,16 +44,16 @@ class Record(dict):
                 self[name] = value
 
     def get_id(self):
-        return None
+        raise NotImplementedError  # pragma: nocover
 
     def populate(self, request):
         self["modifiedAt"] = request.server_time
 
     def abbreviate(self):
-        return self.copy()
+        raise NotImplementedError  # pragma: nocover
 
     def validate(self):
-        return True, None
+        raise NotImplementedError  # pragma: nocover
 
 
 class AppRecord(Record):
@@ -113,7 +113,7 @@ class DeviceRecord(Record):
         return self["uuid"]
 
     def populate(self, request):
-        super(AppRecord, self).populate(request)
+        super(DeviceRecord, self).populate(request)
         if "addedAt" not in self:
             self["addedAt"] = request.server_time
 

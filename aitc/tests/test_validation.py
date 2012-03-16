@@ -55,6 +55,12 @@ class TestRecordHandling(unittest.TestCase):
         ok, error = app.validate()
         self.assertFalse(ok)
 
+        bad_data = good_data.copy()
+        bad_data["receipts"] = ["I", "HACK", "YOU", 42]
+        app = AppRecord(bad_data)
+        ok, error = app.validate()
+        self.assertFalse(ok)
+
     def test_validation_of_device_records(self):
         device = DeviceRecord()
         ok, error = device.validate()
@@ -92,6 +98,12 @@ class TestRecordHandling(unittest.TestCase):
         self.assertFalse(ok)
 
         bad_data = good_data.copy()
+        bad_data["name"] = ["NOT", "A", "STRING"]
+        device = DeviceRecord(bad_data)
+        ok, error = device.validate()
+        self.assertFalse(ok)
+
+        bad_data = good_data.copy()
         bad_data["modifiedAt"] = "42"
         device = DeviceRecord(bad_data)
         ok, error = device.validate()
@@ -102,3 +114,29 @@ class TestRecordHandling(unittest.TestCase):
         device = DeviceRecord(bad_data)
         ok, error = device.validate()
         self.assertFalse(ok)
+
+    def test_handling_of_unicode_app_origin_string(self):
+        good_data = {
+            "origin": "https://example.com",
+            "manifestPath": "/manifest.webapp",
+            "installOrigin": "https://marketplace.mozilla.org",
+            "installedAt": 1330535996745,
+            "modifiedAt": 1330535996945,
+            "receipts": ["receipt1", "receipt2"],
+        }
+
+        app1 = AppRecord(good_data)
+        ok, error = app1.validate()
+        self.assertTrue(ok)
+
+        good_data["origin"] = u"https://\N{SNOWMAN}.com"
+        app2 = AppRecord(good_data)
+        ok, error = app2.validate()
+        self.assertTrue(ok)
+        self.assertTrue(isinstance(app2.get_id(), str))
+
+        good_data["origin"] = u"https://example.com"
+        app2 = AppRecord(good_data)
+        ok, error = app2.validate()
+        self.assertTrue(ok)
+        self.assertEquals(app1.get_id(), app2.get_id())

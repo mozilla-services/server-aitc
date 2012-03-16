@@ -36,4 +36,5 @@ setup(name='AITC',
         "Programming Language :: Python",
         "License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)",
         ],
+      test_suite="aitc",
 )
