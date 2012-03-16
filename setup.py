@@ -6,7 +6,8 @@ import os
 import re
 
 
-install_requires = ['SQLALchemy<=0.6.99', 'unittest2', 'mozsvc', 'cornice']
+install_requires = ['SQLALchemy<=0.6.99', 'unittest2', 'mozsvc', 'cornice',
+                    'syncstorage']
                     
 entry_points = """
 [paste.app_factory]
