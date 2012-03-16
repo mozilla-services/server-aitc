@@ -14,15 +14,6 @@ consider it a bug.
 
 """
 
-import unittest2
-
-import os
-import sys
-import time
-import simplejson as json
-
-from syncstorage.util import get_timestamp
-
 from aitc.records import origin_to_id
 from aitc.tests.functional.support import AITCFunctionalTestCase
 
@@ -68,7 +59,7 @@ class TestAITC(AITCFunctionalTestCase):
             self.app.delete(self.root + "/devices/" + device["uuid"])
         devices = self.app.get(self.root + "/devices/").json["devices"]
         self.assertEquals(devices, [])
-        
+
     def test_putting_an_app(self):
         # Putting it at the correct URL succeeds.
         data = {

@@ -50,7 +50,7 @@ class Record(dict):
         self["modifiedAt"] = request.server_time
 
     def abbreviate(self):
-       return self.copy()
+        return self.copy()
 
     def validate(self):
         return True, None

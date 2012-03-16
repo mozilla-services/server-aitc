@@ -3,7 +3,6 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from mozsvc.config import get_configurator
-from mozsvc.metrics import get_metlog_client
 
 from aitc.controller import AITCController
 

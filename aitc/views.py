@@ -2,9 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import simplejson as json
-
-from pyramid.security import Authenticated, Allow
+from pyramid.security import Allow
 
 #from mozsvc.metrics import MetricsService
 from cornice.service import Service
@@ -21,7 +19,7 @@ class AITCService(Service):
         # Configure DRY defaults for the path.
         kwds["path"] = self._configure_the_path(kwds["path"])
         # Ensure all views require an authenticated user.
-        #kwds.setdefault("permission", "owner")
+        kwds.setdefault("permission", "owner")
         kwds.setdefault("acl", self._default_acl)
         super(AITCService, self).__init__(**kwds)
 
@@ -36,7 +34,7 @@ class AITCService(Service):
 
     def _default_acl(self, request):
         """Default ACL: only the owner is allowed access."""
-        return [(Allow, request.matchdict["userid"], "owner")]
+        return [(Allow, int(request.matchdict["userid"]), "owner")]
 
 
 root = AITCService(name="root", path="/")
