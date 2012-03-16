@@ -14,6 +14,13 @@ consider it a bug.
 
 """
 
+import unittest2
+
+import os
+import sys
+import urlparse
+import socket
+
 from aitc.records import origin_to_id
 from aitc.tests.functional.support import AITCFunctionalTestCase
 
@@ -164,3 +171,30 @@ class TestAITC(AITCFunctionalTestCase):
         self.app.put_json(self.root + "/apps/TESTAPP", data, status=400)
         data = {"invalid": "field"}
         self.app.put_json(self.root + "/apps/TESTAPP", data, status=400)
+
+
+if __name__ == "__main__":
+    # When run as a script, this file will execute the
+    # functional tests against a live webserver.
+
+    if not 2 <= len(sys.argv) <= 3:
+        print>>sys.stderr, "USAGE: test_aitc.py <server-url> [<ini-file>]"
+        sys.exit(1)
+
+    # Read host URL from command line args.
+    # Check that it's reachable and fail out early if not.
+    os.environ["MOZSVC_TEST_REMOTE"] = sys.argv[1]
+    urlinfo = urlparse.urlparse(os.environ["MOZSVC_TEST_REMOTE"])
+    s = socket.create_connection((urlinfo.hostname, urlinfo.port or 80))
+    s.close()
+
+    # Read config file from command line args if given.
+    # Check that it exists and fail out early if not.
+    if len(sys.argv) > 2:
+        os.environ["MOZSVC_TEST_INI_FILE"] = sys.argv[2]
+        open(os.environ["MOZSVC_TEST_INI_FILE"], "r").close()
+
+    suite = unittest2.TestSuite()
+    suite.addTest(unittest2.makeSuite(TestAITC))
+    res = unittest2.TextTestRunner().run(suite)
+    sys.exit(res)
