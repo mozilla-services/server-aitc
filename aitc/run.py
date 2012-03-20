@@ -9,22 +9,26 @@ for an 'application' variable
 import os
 from logging.config import fileConfig
 from ConfigParser import NoSectionError
+from paste.deploy import loadapp
 
 # setting up the egg cache to a place where apache can write
 os.environ['PYTHON_EGG_CACHE'] = '/tmp/python-eggs'
 
 # the ini file is grabbed at its production place
 # unless force via an environ variable
-ini_file = os.path.join('/etc', 'aitc', 'production.ini')
-ini_file = os.path.abspath(os.environ.get('AITC_INI_FILE', ini_file))
+ini_file = os.environ.get("AITC_INI_FILE")
+if ini_file is None:
+    ini_file = os.path.join('/etc', 'aitc', 'production.ini')
+    if not os.path.exists(ini_file):
+        ini_file = os.path.join(os.path.dirname(__file__),
+                                "tests", "tests.ini")
+ini_file = os.path.abspath(ini_file)
+
+# setting up logging
+try:
+    fileConfig(ini_file)
+except NoSectionError:
+    pass
 
 # running the app using Paste
-if __name__ == '__main__':
-    # setting up logging
-    try:
-        fileConfig(ini_file)
-    except NoSectionError:
-        pass
-
-    from paste.deploy import loadapp
-    application = loadapp('config:%s' % ini_file)
+application = loadapp('config:%s' % ini_file)

@@ -14,6 +14,28 @@ import aitc
 TEST_INI_FILE = os.path.join(os.path.dirname(__file__), "tests.ini")
 
 
+def restore_env(*keys):
+    """Decorator that ensures os.environ gets restored after a test.
+
+    Given a list of environment variable keys, this decorator will save the
+    current values of those environment variables at the start of the call
+    and restore them to those values at the end.
+    """
+    def decorator(func):
+        def wrapper(*args, **kwds):
+            values = [os.environ.get(key) for key in keys]
+            try:
+                return func(*args, **kwds)
+            finally:
+                for key, value in zip(keys, values):
+                    if value is None:
+                        os.environ.pop(key, None)
+                    else:
+                        os.environ[key] = value
+        return wrapper
+    return decorator
+
+
 class TestsThatOnlyServeToIncreaseLOCCoverage(unittest.TestCase):
     """Suite of miscellanrous tests that increase line coverage.
 
@@ -24,17 +46,29 @@ class TestsThatOnlyServeToIncreaseLOCCoverage(unittest.TestCase):
     Oh yes, and they help increate LOC coverage...
     """
 
+    @restore_env("AITC_TEST_ONE", "AITC_TEST_TWO")
+    def test_that_restore_env_actually_works(self):
+        @restore_env("AITC_TEST_ONE", "AITC_TEST_TWO")
+        def testit():
+            os.environ["AITC_TEST_ONE"] = "WRONG"
+            os.environ["AITC_TEST_TWO"] = "WRONG"
+        os.environ["AITC_TEST_ONE"] = "one"
+        self.assertEquals(os.environ.get("AITC_TEST_ONE"), "one")
+        self.assertEquals(os.environ.get("AITC_TEST_TWO"), None)
+        testit()
+        self.assertEquals(os.environ.get("AITC_TEST_ONE"), "one")
+        self.assertEquals(os.environ.get("AITC_TEST_TWO"), None)
+
     def test_that_the_main_function_produces_a_wsgi_app(self):
         app = aitc.main({"__file__": TEST_INI_FILE})
         self.assertTrue(callable(app))
 
+    @restore_env("AITC_INI_FILE")
     def test_that_run_script_produces_an_application(self):
         os.environ["AITC_INI_FILE"] = TEST_INI_FILE
-        try:
-            run_module("aitc.run", run_name="__main__")
-        finally:
-            del os.environ["AITC_INI_FILE"]
+        run_module("aitc.run", run_name="__main__")
 
+    @restore_env("MOZSVC_TEST_REMOTE", "MOZSVC_TEST_INI_FILE")
     def test_that_functional_tests_can_be_run_as_a_script(self):
         module = "aitc.tests.functional.test_aitc"
         orig_argv = sys.argv

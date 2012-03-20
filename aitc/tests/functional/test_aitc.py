@@ -18,8 +18,6 @@ import unittest2
 
 import os
 import sys
-import urlparse
-import socket
 
 from aitc.records import origin_to_id
 from aitc.tests.functional.support import AITCFunctionalTestCase
@@ -78,7 +76,7 @@ class TestAITC(AITCFunctionalTestCase):
 
         # Reset the storage to a known state (aka "empty").
         apps = self.app.get(self.root + "/apps/").json["apps"]
-        for app in apps:   # pragma: no cover
+        for app in apps:   # pragma: nocover
             id = origin_to_id(app["origin"])
             self.app.delete(self.root + "/apps/" + id)
         apps = self.app.get(self.root + "/apps/").json["apps"]
@@ -181,20 +179,11 @@ if __name__ == "__main__":
         print>>sys.stderr, "USAGE: test_aitc.py <server-url> [<ini-file>]"
         sys.exit(1)
 
-    # Read host URL from command line args.
-    # Check that it's reachable and fail out early if not.
     os.environ["MOZSVC_TEST_REMOTE"] = sys.argv[1]
-    urlinfo = urlparse.urlparse(os.environ["MOZSVC_TEST_REMOTE"])
-    s = socket.create_connection((urlinfo.hostname, urlinfo.port or 80))
-    s.close()
-
-    # Read config file from command line args if given.
-    # Check that it exists and fail out early if not.
     if len(sys.argv) > 2:
         os.environ["MOZSVC_TEST_INI_FILE"] = sys.argv[2]
-        open(os.environ["MOZSVC_TEST_INI_FILE"], "r").close()
 
     suite = unittest2.TestSuite()
     suite.addTest(unittest2.makeSuite(TestAITC))
-    res = unittest2.TextTestRunner().run(suite)
+    res = unittest2.TextTestRunner(stream=sys.stderr).run(suite)
     sys.exit(res)
