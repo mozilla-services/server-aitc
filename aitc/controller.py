@@ -36,7 +36,7 @@ class AITCController(object):
         kwds = {"full": "1"}
         if "after" in request.GET:
             kwds["newer"] = request.GET["after"]
-        bsos = self.controller.get_collection(request, full="1")
+        bsos = self.controller.get_collection(request, **kwds)
         items = (json.loads(bso["payload"]) for bso in bsos)
         if "full" not in request.GET:
             items = (self._abbreviate_item(request, item) for item in items)
@@ -90,7 +90,7 @@ class AITCController(object):
         """Produce abbreviated data for a single item."""
         try:
             RecordClass = self.RECORD_CLASSES[request.matchdict["collection"]]
-        except KeyError:
+        except KeyError:  #pragma nocover
             raise HTTPNotFound()
         item = RecordClass(data)
         return item.abbreviate()

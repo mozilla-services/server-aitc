@@ -18,6 +18,7 @@ import unittest2
 
 import os
 import sys
+import time
 
 from aitc.records import origin_to_id
 from aitc.tests.functional.support import AITCFunctionalTestCase
@@ -132,7 +133,7 @@ class TestAITC(AITCFunctionalTestCase):
         devices = self.app.get(self.root + "/devices/").json["devices"]
         self.assertEquals(len(devices), 0)
 
-    def test_setting_of_app_timestamp_fields_on_write(self):
+    def test_that_app_timestamp_fields_are_set_on_write(self):
         data = TEST_APP_DATA.copy()
         del data["installedAt"]
         del data["modifiedAt"]
@@ -147,7 +148,7 @@ class TestAITC(AITCFunctionalTestCase):
         self.assertEquals(app1["installedAt"], app2["installedAt"])
         self.assertGreater(app2["modifiedAt"], app2["installedAt"])
 
-    def test_setting_of_device_timestamp_fields_on_write(self):
+    def test_that_device_timestamp_fields_are_set_on_write(self):
         data = TEST_DEVICE_DATA.copy()
         del data["addedAt"]
         del data["modifiedAt"]
@@ -162,13 +163,52 @@ class TestAITC(AITCFunctionalTestCase):
         self.assertEquals(device1["addedAt"], device2["addedAt"])
         self.assertGreater(device2["modifiedAt"], device2["addedAt"])
 
-    def test_handling_of_unexpected_json_uploads(self):
+    def test_listing_of_apps_modified_after_a_given_time(self):
+        # Write two apps, separated by a 10ms sleep.
+        data1 = TEST_APP_DATA.copy()
+        id1 = origin_to_id(data1["origin"])
+        r = self.app.put_json(self.root + "/apps/" + id1, data1)
+        ts1 = int(r.headers["X-Timestamp"])
+        time.sleep(0.01)
+        data2 = TEST_APP_DATA.copy()
+        data2["origin"] = "http://testapp.com"
+        id2 = origin_to_id(data2["origin"])
+	r = self.app.put_json(self.root + "/apps/" + id2, data2)
+        ts2 = int(r.headers["X-Timestamp"])
+        # With no "after" qualifier", both apps are listed.
+        apps = self.app.get(self.root + "/apps/")
+        self.assertEquals(len(apps.json["apps"]), 2)
+        # With "after" = timestamp of first, we only get one.
+        apps = self.app.get(self.root + "/apps/?after=" + str(ts1))
+        self.assertEquals(len(apps.json["apps"]), 1)
+        self.assertEquals(apps.json["apps"][0]["origin"], data2["origin"])
+        # With "after" = just after timestamp of first, we only get one.
+        apps = self.app.get(self.root + "/apps/?after=" + str(ts1 + 1))
+        self.assertEquals(len(apps.json["apps"]), 1)
+        self.assertEquals(apps.json["apps"][0]["origin"], data2["origin"])
+        # With "after" = timestamp of second, we get niether
+        apps = self.app.get(self.root + "/apps/?after=" + str(ts2))
+        self.assertEquals(len(apps.json["apps"]), 0)
+        # With "after" = just after timestamp of second, we get niether
+        apps = self.app.get(self.root + "/apps/?after=" + str(ts2 + 1))
+        self.assertEquals(len(apps.json["apps"]), 0)
+
+    def test_that_uploading_invalid_json_gives_a_400_response(self):
+        data = "NOT JSON"
+        self.app.put(self.root + "/apps/TESTAPP", data, status=400)
         data = 42
         self.app.put_json(self.root + "/apps/TESTAPP", data, status=400)
         data = ["NOT", "AN", "OBJECT"]
         self.app.put_json(self.root + "/apps/TESTAPP", data, status=400)
         data = {"invalid": "field"}
         self.app.put_json(self.root + "/apps/TESTAPP", data, status=400)
+        data = TEST_APP_DATA.copy()
+        data.pop("manifestPath")
+        self.app.put_json(self.root + "/apps/TESTAPP", data, status=400)
+
+    def test_that_uploads_to_unknown_collection_give_a_404_response(self):
+        data = TEST_APP_DATA.copy()
+        self.app.put_json(self.root + "/oops/TESTAPP", data, status=404)
 
 
 if __name__ == "__main__":
