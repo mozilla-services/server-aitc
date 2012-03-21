@@ -193,6 +193,126 @@ class TestAITC(AITCFunctionalTestCase):
         apps = self.app.get(self.root + "/apps/?after=" + str(ts2 + 1))
         self.assertEquals(len(apps.json["apps"]), 0)
 
+    def test_listing_of_full_app_records(self):
+        data1 = TEST_APP_DATA.copy()
+        data1.pop("modifiedAt")
+        id1 = origin_to_id(data1["origin"])
+        self.app.put_json(self.root + "/apps/" + id1, data1)
+        data2 = TEST_APP_DATA.copy()
+        data2.pop("modifiedAt")
+        data2["origin"] = "http://testapp.com"
+        id2 = origin_to_id(data2["origin"])
+        self.app.put_json(self.root + "/apps/" + id2, data2)
+        # Without "full" we get the abbreviated form.
+        apps = self.app.get(self.root + "/apps/").json["apps"]
+        self.assertEquals(len(apps), 2)
+        for app in apps:
+            self.assertEquals(sorted(app.keys()), ["modifiedAt", "origin"])
+        # With "full" we get the full data output.
+        apps = self.app.get(self.root + "/apps/?full=1").json["apps"]
+        self.assertEquals(len(apps), 2)
+        for app, data in zip(apps, (data1, data2)):
+            del app["modifiedAt"]
+            self.assertEquals(app, data)
+
+    def test_listing_of_apps_with_x_if_modified_since(self):
+        data1 = TEST_APP_DATA.copy()
+        id1 = origin_to_id(data1["origin"])
+        r = self.app.put_json(self.root + "/apps/" + id1, data1)
+        ts1 = int(r.headers["X-Timestamp"])
+        time.sleep(0.01)
+        # No X-I-M-S header => full listing.
+        apps = self.app.get(self.root + "/apps/", status=200)
+        self.assertEquals(len(apps.json["apps"]), 1)
+        # X-I-M-S header some time before the write => full listing.
+        headers = {"X-If-Modified-Since": str(ts1 - 1)}
+        apps = self.app.get(self.root + "/apps/", headers=headers, status=200)
+        self.assertEquals(len(apps.json["apps"]), 1)
+        # X-I-M-S header equals time of write => 304 Not Modified
+        headers = {"X-If-Modified-Since": str(ts1)}
+        self.app.get(self.root + "/apps/", headers=headers, status=304)
+        # X-I-M-S header some time after the write => 304 Not Modified
+        headers = {"X-If-Modified-Since": str(ts1 + 1)}
+        self.app.get(self.root + "/apps/", headers=headers, status=304)
+        # Modify it, then we get the full listing again.
+        data2 = TEST_APP_DATA.copy()
+        data2["origin"] = "http://testapp.com"
+        id2 = origin_to_id(data2["origin"])
+        r = self.app.put_json(self.root + "/apps/" + id2, data2)
+        ts2 = int(r.headers["X-Timestamp"])
+        time.sleep(0.01)
+        headers = {"X-If-Modified-Since": str(ts1 + 1)}
+        apps = self.app.get(self.root + "/apps/", headers=headers, status=200)
+        self.assertEquals(len(apps.json["apps"]), 2)
+        # Using updated timestamp gives 304 again.
+        headers = {"X-If-Modified-Since": str(ts2 + 1)}
+        self.app.get(self.root + "/apps/", headers=headers, status=304)
+        # But if we *delete* an app, that counts as being modified.
+        # XXX TODO: this needs to be fixed in syncstorage
+        #self.app.delete(self.root + "/apps/" + id1)
+        #headers = {"X-If-Modified-Since": str(ts2 + 1)}
+        #apps = self.app.get(self.root + "/apps/", headers=headers, status=200)
+        #self.assertEquals(len(apps.json["apps"]), 1)
+
+    def test_getting_an_app_with_x_if_modified_since(self):
+        data = TEST_APP_DATA.copy()
+        del data["modifiedAt"]
+        id = origin_to_id(data["origin"])
+        r = self.app.put_json(self.root + "/apps/" + id, data)
+        ts = int(r.headers["X-Timestamp"])
+        time.sleep(0.01)
+        # No X-I-M-S header => we get the app data.
+        app = self.app.get(self.root + "/apps/" + id).json
+        del app["modifiedAt"]
+        self.assertEquals(app, data)
+        # X-I-M-S header before time of write => we get the app data.
+        headers = {"X-If-Modified-Since": str(ts - 1)}
+        app = self.app.get(self.root + "/apps/" + id).json
+        del app["modifiedAt"]
+        self.assertEquals(app, data)
+        # X-I-M-S header at time of write => 304 Not Modified
+        headers = {"X-If-Modified-Since": str(ts)}
+        self.app.get(self.root + "/apps/" + id, headers=headers, status=304)
+        # X-I-M-S header after time of write => 304 Not Modified
+        headers = {"X-If-Modified-Since": str(ts + 1)}
+        self.app.get(self.root + "/apps/" + id, headers=headers, status=304)
+        # After another write, we get the updated data.
+        self.app.put_json(self.root + "/apps/" + id, data)
+        headers = {"X-If-Modified-Since": str(ts + 1)}
+        app = self.app.get(self.root + "/apps/" + id, headers=headers).json
+        del app["modifiedAt"]
+        self.assertEquals(app, data)
+
+    def test_putting_an_app_with_x_if_unmodified_since(self):
+        data = TEST_APP_DATA.copy()
+        id = origin_to_id(data["origin"])
+        # The first put should give a 201 Created.
+        # XXX TODO: this needs to be fixed in syncstorage.
+        r = self.app.put_json(self.root + "/apps/" + id, data, status=204)
+        # No X-I-U-S header => we can put an update.
+        # The second write gives a 204 No Content.
+        r = self.app.put_json(self.root + "/apps/" + id, data, status=204)
+        ts = int(r.headers["X-Timestamp"])
+        time.sleep(0.01)
+        # X-I-U-S header before time of write => 412 Precondition Failed
+        headers = {"X-If-Unmodified-Since": str(ts - 1)}
+        self.app.put_json(self.root + "/apps/" + id, data, headers=headers,
+                          status=412)
+        # X-I-U-S header at time of write => update succeeds
+        headers = {"X-If-Unmodified-Since": str(ts)}
+        r = self.app.put_json(self.root + "/apps/" + id, data, headers=headers,
+                              status=204)
+        ts = int(r.headers["X-Timestamp"])
+        time.sleep(0.01)
+        # X-I-U-S header after time of write => update succeeds.
+        headers = {"X-If-Unmodified-Since": str(ts + 1)}
+        self.app.put_json(self.root + "/apps/" + id, data, headers=headers,
+                          status=204)
+
+
+    def test_that_getting_a_nonexistant_app_gives_a_404_response(self):
+        self.app.get(self.root + "/apps/NONEXISTENT", status=404)
+
     def test_that_uploading_invalid_json_gives_a_400_response(self):
         data = "NOT JSON"
         self.app.put(self.root + "/apps/TESTAPP", data, status=400)
