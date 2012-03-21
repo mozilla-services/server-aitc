@@ -4,13 +4,16 @@
 
 import simplejson as json
 
-from pyramid.httpexceptions import HTTPNotFound
+from pyramid.httpexceptions import HTTPNotFound, HTTPRequestEntityTooLarge
 
 from mozsvc.exceptions import ERROR_MALFORMED_JSON, ERROR_INVALID_OBJECT
 
 from syncstorage.controller import StorageController, HTTPJsonBadRequest
 
 from aitc import records
+
+
+MAX_ITEM_SIZE = 8 * 1024
 
 
 class AITCController(object):
@@ -50,6 +53,8 @@ class AITCController(object):
     def set_item(self, request):
         """Upload a new item by ID."""
         # Validate the incoming data.
+        if len(request.body) > MAX_ITEM_SIZE:
+            raise HTTPRequestEntityTooLarge()
         try:
             data = json.loads(request.body)
         except ValueError:

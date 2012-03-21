@@ -248,11 +248,10 @@ class TestAITC(AITCFunctionalTestCase):
         headers = {"X-If-Modified-Since": str(ts2 + 1)}
         self.app.get(self.root + "/apps/", headers=headers, status=304)
         # But if we *delete* an app, that counts as being modified.
-        # XXX TODO: this needs to be fixed in syncstorage
-        #self.app.delete(self.root + "/apps/" + id1)
-        #headers = {"X-If-Modified-Since": str(ts2 + 1)}
-        #apps = self.app.get(self.root + "/apps/", headers=headers, status=200)
-        #self.assertEquals(len(apps.json["apps"]), 1)
+        self.app.delete(self.root + "/apps/" + id1)
+        headers = {"X-If-Modified-Since": str(ts2 + 1)}
+        apps = self.app.get(self.root + "/apps/", headers=headers, status=200)
+        self.assertEquals(len(apps.json["apps"]), 1)
 
     def test_getting_an_app_with_x_if_modified_since(self):
         data = TEST_APP_DATA.copy()
@@ -287,8 +286,7 @@ class TestAITC(AITCFunctionalTestCase):
         data = TEST_APP_DATA.copy()
         id = origin_to_id(data["origin"])
         # The first put should give a 201 Created.
-        # XXX TODO: this needs to be fixed in syncstorage.
-        r = self.app.put_json(self.root + "/apps/" + id, data, status=204)
+        r = self.app.put_json(self.root + "/apps/" + id, data, status=201)
         # No X-I-U-S header => we can put an update.
         # The second write gives a 204 No Content.
         r = self.app.put_json(self.root + "/apps/" + id, data, status=204)
@@ -309,9 +307,61 @@ class TestAITC(AITCFunctionalTestCase):
         self.app.put_json(self.root + "/apps/" + id, data, headers=headers,
                           status=204)
 
+    def test_creating_an_app_with_x_if_unmodified_since_equal_to_zero(self):
+        data = TEST_APP_DATA.copy()
+        id = origin_to_id(data["origin"])
+        headers = {"X-If-Unmodified-Since": "0"}
+        # The first put should give a 201 Created.
+        self.app.put_json(self.root + "/apps/" + id, data, headers=headers,
+                          status=201)
+        # The second put fails due to conflict.
+        self.app.put_json(self.root + "/apps/" + id, data, headers=headers,
+                          status=412)
+
+    def test_that_app_upload_size_is_limited_to_eight_kilobytes(self):
+        data = TEST_APP_DATA.copy()
+        id = origin_to_id(data["origin"])
+        # Fails with >8KB of data
+        data["receipts"] = ["X" * 8 * 1024]
+        self.app.put_json(self.root + "/apps/" + id, data, status=413)
+        # Succeeds with <8KB of data
+        data["receipts"] = ["X" * 7 * 1024]
+        self.app.put_json(self.root + "/apps/" + id, data, status=201)
+
+    def test_that_device_upload_size_is_limited_to_eight_kilobytes(self):
+        data = TEST_DEVICE_DATA.copy()
+        id = data["uuid"]
+        # Fails with >8KB of data
+        data["apps"] = {"data": "X" * 8 * 1024}
+        self.app.put_json(self.root + "/devices/" + id, data, status=413)
+        # Succeeds with <8KB of data
+        data["apps"] = {"data": "X" * 7 * 1024}
+        self.app.put_json(self.root + "/devices/" + id, data, status=201)
+
+    def test_deleting_an_app_with_x_if_unmodified_since(self):
+        data = TEST_APP_DATA.copy()
+        id = origin_to_id(data["origin"])
+        r = self.app.put_json(self.root + "/apps/" + id, data, status=201)
+        ts = int(r.headers["X-Timestamp"])
+        time.sleep(0.01)
+        # X-I-U-S header equalt to zero => 412 Precondition Failed
+        headers = {"X-If-Unmodified-Since": "0"}
+        self.app.delete(self.root + "/apps/" + id, data, headers=headers,
+                        status=412)
+        # X-I-U-S header before time of write => 412 Precondition Failed
+        headers = {"X-If-Unmodified-Since": str(ts - 1)}
+        self.app.delete(self.root + "/apps/" + id, data, headers=headers,
+                        status=412)
+        # X-I-U-S header at time of write => delete succeeds
+        headers = {"X-If-Unmodified-Since": str(ts)}
+        self.app.delete(self.root + "/apps/" + id, data, headers=headers,
+                        status=204)
 
     def test_that_getting_a_nonexistant_app_gives_a_404_response(self):
         self.app.get(self.root + "/apps/NONEXISTENT", status=404)
+
+    def test_that_deleting_a_nonexistant_app_gives_a_404_response(self):
+        self.app.delete(self.root + "/apps/NONEXISTENT", status=404)
 
     def test_that_uploading_invalid_json_gives_a_400_response(self):
         data = "NOT JSON"
