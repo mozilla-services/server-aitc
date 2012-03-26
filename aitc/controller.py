@@ -39,7 +39,7 @@ class AITCController(object):
         kwds = {"full": "1"}
         if "after" in request.GET:
             kwds["newer"] = request.GET["after"]
-        bsos = self.controller.get_collection(request, **kwds)
+        bsos = self.controller.get_collection(request, **kwds)["items"]
         items = (json.loads(bso["payload"]) for bso in bsos)
         if "full" not in request.GET:
             items = (self._abbreviate_item(request, item) for item in items)
