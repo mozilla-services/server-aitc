@@ -44,7 +44,7 @@ TEST_DEVICE_DATA = {
     "layout": "android/phone",
     "modifiedAt": 1234,  # this will be overwritten on write
     "addedAt": 1234,     # this will not be overwritten
-    "apps": {"foo": "bar"}
+    "apps": {"foo": "bar"},
 }
 
 
@@ -173,7 +173,7 @@ class TestAITC(AITCFunctionalTestCase):
         data2 = TEST_APP_DATA.copy()
         data2["origin"] = "http://testapp.com"
         id2 = origin_to_id(data2["origin"])
-	r = self.app.put_json(self.root + "/apps/" + id2, data2)
+        r = self.app.put_json(self.root + "/apps/" + id2, data2)
         ts2 = int(r.headers["X-Timestamp"])
         # With no "after" qualifier", both apps are listed.
         apps = self.app.get(self.root + "/apps/")
@@ -349,16 +349,13 @@ class TestAITC(AITCFunctionalTestCase):
         time.sleep(0.01)
         # X-I-U-S header equalt to zero => 412 Precondition Failed
         headers = {"X-If-Unmodified-Since": "0"}
-        self.app.delete(self.root + "/apps/" + id, data, headers=headers,
-                        status=412)
+        self.app.delete(self.root + "/apps/" + id, headers=headers, status=412)
         # X-I-U-S header before time of write => 412 Precondition Failed
         headers = {"X-If-Unmodified-Since": str(ts - 1)}
-        self.app.delete(self.root + "/apps/" + id, data, headers=headers,
-                        status=412)
+        self.app.delete(self.root + "/apps/" + id, headers=headers, status=412)
         # X-I-U-S header at time of write => delete succeeds
         headers = {"X-If-Unmodified-Since": str(ts)}
-        self.app.delete(self.root + "/apps/" + id, data, headers=headers,
-                        status=204)
+        self.app.delete(self.root + "/apps/" + id, headers=headers, status=204)
 
     def test_that_getting_a_nonexistant_app_gives_a_404_response(self):
         self.app.get(self.root + "/apps/NONEXISTENT", status=404)
@@ -389,7 +386,7 @@ if __name__ == "__main__":
     # functional tests against a live webserver.
 
     if not 2 <= len(sys.argv) <= 3:
-        print>>sys.stderr, "USAGE: test_aitc.py <server-url> [<ini-file>]"
+        print >> sys.stderr, "USAGE: test_aitc.py <server-url> [<ini-file>]"
         sys.exit(1)
 
     os.environ["MOZSVC_TEST_REMOTE"] = sys.argv[1]

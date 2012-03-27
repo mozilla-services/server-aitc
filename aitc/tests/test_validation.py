@@ -73,7 +73,7 @@ class TestRecordHandling(unittest.TestCase):
             "layout": "android/phone",
             "addedAt": 1330535996745,
             "modifiedAt": 1330535996945,
-            "apps": {}
+            "apps": {},
         }
         device = DeviceRecord(good_data)
         ok, error = device.validate()

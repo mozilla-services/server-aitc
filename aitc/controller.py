@@ -95,7 +95,7 @@ class AITCController(object):
         """Produce abbreviated data for a single item."""
         try:
             RecordClass = self.RECORD_CLASSES[request.matchdict["collection"]]
-        except KeyError:  #pragma nocover
+        except KeyError:  # pragma nocover
             raise HTTPNotFound()
         item = RecordClass(data)
         return item.abbreviate()
