@@ -5,6 +5,7 @@
 import os
 import sys
 import unittest
+import functools
 import StringIO
 from runpy import run_module
 
@@ -22,6 +23,7 @@ def restore_env(*keys):
     and restore them to those values at the end.
     """
     def decorator(func):
+        @functools.wraps(func)
         def wrapper(*args, **kwds):
             values = [os.environ.get(key) for key in keys]
             try:
