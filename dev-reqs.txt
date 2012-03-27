@@ -1,5 +1,5 @@
 Chameleon
-Distutils2
+Distutils2==1.0a3
 Jinja2
 Mako
 MarkupSafe
