@@ -13,10 +13,9 @@ Group: Development/Libraries
 BuildRoot: %{_tmppath}/%{pythonname}-%{version}-%{release}-buildroot
 Prefix: %{_prefix}
 BuildArch: noarch
-Vendor: Tarek Ziade <tarek@mozilla.com>
+Vendor: Ryan Kelly <rfkelly@mozilla.com>
 BuildRequires: libevent-devel libmemcached-devel
-Requires: nginx memcached gunicorn python26 python26-pylibmc python26-setuptools python26-pyramid python26-paste python26-pastedeploy python26-pastescript python26-sqlalchemy python26-simplejson python26-gevent python26-pymysql python26-pymysql_sa python26-mozsvc python26-cornice python26-greenlet
-Conflicts: 
+Requires: nginx memcached gunicorn python26 python26-argparse python26-cef python26-cornice python26-setuptools python26-docutils python26-gevent python26-greenlet python26-macauthlib python26-mako python26-markupsafe python26-metlog-py python26-mozsvc python26-mysql-python python26-ordereddict python26-paste python26-pastedeploy python26-pastescript python26-pylibmc python26-pymysql python26-pymysql_sa python26-pyramid python26-pyramid_debugtoolbar python26-pyramid_whoauth python26-repoze.lru python26-repoze.who python26-repoze.who.plugins.macauth python26-pyzmq python26-syncstorage python-simplejson
 Url: https://github.com/mozilla-services/server-aitc
 
 %description

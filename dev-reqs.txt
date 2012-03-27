@@ -1,11 +1,50 @@
-SQLAlchemy <= 0.6.99
+Chameleon
+Distutils2
+Jinja2
+Mako
+MarkupSafe
 MySQL-python
-pymysql_sa
-pylibmc
+Paste
+PasteDeploy
+PasteScript
+PyMySQL
+Pygments
+Routes
+SQLAlchemy
+WSGIProxy
+WebOb
+WebTest
+argparse
+cef
+cornice
+coverage
+docutils
 gevent
 greenlet
-PyMySQL
+macauthlib
+metlog-py
+mozsvc
+ordereddict
+pylibmc
+pymysql_sa
+pyramid
+pyramid_debugtoolbar
+pyramid_whoauth
+# The pyzmq package doesn't work with pypi2rpm.
+# It works fine if built from a source checkout,
+# which is done directly in the makefile.
+#pyzmq
+repoze.lru
+repoze.who
+repoze.who.plugins.macauth
+simplejson
+sphinx
+# SyncStorage isn't on PyPI, so we build the rpm
+# directly from the makefile.
+#syncstorage
+tokenlib
+translationstring
 unittest2
-git+git://github.com/mozilla-services/mozservices.git
-git+git://github.com/mozilla-services/cornice.git
-git+git://github.com/mozilla-services/server-syncstorage.git
+venusian
+zope.deprecation
+zope.interface

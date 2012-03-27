@@ -1,5 +1,6 @@
-include README.rst
+include README
 include RELEASE.txt
-include AITC.spec
-include *.cfg *.ini *.wsgi *.sh
+include MANIFEST.in
+include *.cfg *.spec
+recursive-include aitc *.cfg *.ini
 recursive-include etc *

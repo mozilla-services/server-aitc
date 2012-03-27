@@ -6,9 +6,8 @@ import os
 import re
 
 
-install_requires = ['SQLALchemy<=0.6.99', 'unittest2', 'mozsvc', 'cornice',
-                    'syncstorage']
-                    
+install_requires = ['SQLALchemy', 'unittest2', 'mozsvc', 'cornice']
+
 entry_points = """
 [paste.app_factory]
 main = aitc:main
@@ -38,4 +37,8 @@ setup(name='AITC',
         "License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)",
         ],
       test_suite="aitc",
+      package_data={
+          "aitc.tests": ["*.ini"],
+      },
+      include_package_data=True,
 )
