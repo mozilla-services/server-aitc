@@ -79,7 +79,7 @@ build_rpms:
 	rm -rf /tmp/simplejson-2.4.0
 	rm -f /tmp/simplejson-2.4.0.tar.gz
 	# SyncStorage isn't on PyPI.
-	wget -O /tmp/SyncStorage-2.0b1.tar.gz http://pypi.build.mtv1.svc.mozilla.com/extras/SyncStorage-2.0b1.tar.gz
+	wget -O /tmp/SyncStorage-2.0b1.tar.gz https://github.com/mozilla-services/server-syncstorage/tarball/master
 	$(PYPI2RPM) --dist-dir=$(CURDIR)/rpms /tmp/SyncStorage-2.0b1.tar.gz
 	rm -f /tmp/SyncStorage-2.0b1.tar.gz
 
