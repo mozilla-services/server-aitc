@@ -4,6 +4,8 @@
 
 from syncstorage.tests.functional.support import StorageFunctionalTestCase
 
+from mozsvc.metrics import setup_metlog
+
 
 class AITCFunctionalTestCase(StorageFunctionalTestCase):
 
@@ -12,5 +14,6 @@ class AITCFunctionalTestCase(StorageFunctionalTestCase):
         # I want to avoid the StorageFunctionalTestCase itself, so
         # that we don't wind up including the syncstorage app.
         config = super(StorageFunctionalTestCase, self).get_test_configurator()
+        setup_metlog(config.registry.settings.getsection('metlog'))
         config.include("aitc")
         return config

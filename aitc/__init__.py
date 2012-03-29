@@ -3,6 +3,7 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from mozsvc.config import get_configurator
+from mozsvc.plugin import load_from_settings
 
 from aitc.controller import AITCController
 
@@ -23,5 +24,6 @@ def includeme(config):
 
 def main(global_config, **settings):
     config = get_configurator(global_config, **settings)
+    load_from_settings('metlog', config.registry.settings)
     config.include(includeme)
     return config.make_wsgi_app()

@@ -4,11 +4,10 @@
 
 from pyramid.security import Allow
 
-#from mozsvc.metrics import MetricsService
-from cornice.service import Service
+from mozsvc.metrics import MetricsService
 
 
-class AITCService(Service):
+class AITCService(MetricsService):
     """Custom Service class to assist DRY in the AITC project.
 
     This Service subclass provides useful defaults for AITC service
