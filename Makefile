@@ -1,4 +1,5 @@
 APPNAME = server-aitc
+DEPS = https://github.com/mozilla-services/mozservices,https://github.com/mozilla-services/server-syncstorage
 VIRTUALENV = virtualenv
 NOSE = bin/nosetests -s --with-xunit
 TESTS = aitc/tests
@@ -52,7 +53,7 @@ build:
 	$(INSTALL) WebTest
 	$(BUILDAPP) -c $(CHANNEL) $(PYPIOPTIONS) $(DEPS)
 	# This is a temporary measure until we can build deps from github.
-	$(INSTALL) git+git://github.com/mozilla-services/server-syncstorage.git
+	#$(INSTALL) git+git://github.com/mozilla-services/server-syncstorage.git
 
 update:
 	$(BUILDAPP) -c $(CHANNEL) $(PYPIOPTIONS) $(DEPS)
@@ -79,9 +80,9 @@ build_rpms:
 	rm -rf /tmp/simplejson-2.4.0
 	rm -f /tmp/simplejson-2.4.0.tar.gz
 	# SyncStorage isn't on PyPI.
-	wget -O /tmp/SyncStorage-2.0b1.tar.gz https://github.com/mozilla-services/server-syncstorage/tarball/master
-	$(PYPI2RPM) --dist-dir=$(CURDIR)/rpms /tmp/SyncStorage-2.0b1.tar.gz
-	rm -f /tmp/SyncStorage-2.0b1.tar.gz
+	#wget -O /tmp/SyncStorage-2.0b1.tar.gz https://github.com/mozilla-services/server-syncstorage/tarball/master
+	#$(PYPI2RPM) --dist-dir=$(CURDIR)/rpms /tmp/SyncStorage-2.0b1.tar.gz
+	#rm -f /tmp/SyncStorage-2.0b1.tar.gz
 
 
 mock: build build_rpms

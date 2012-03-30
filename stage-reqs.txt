@@ -23,7 +23,6 @@ gevent==0.13.6
 greenlet==0.3.4
 macauthlib==0.1
 metlog-py==0.8.2
-mozsvc==0.2
 ordereddict==1.1
 pylibmc==1.2.2
 pymysql_sa==1.0
@@ -39,9 +38,6 @@ repoze.who==2.0
 repoze.who.plugins.macauth==0.1
 simplejson==2.4
 sphinx==1.1.3
-# SyncStorage isn't on PyPI, so we build the rpm
-# directly from the makefile.
-#syncstorage==2.0b1
 tokenlib==0.1
 translationstring==1.1
 unittest2==0.5.1
