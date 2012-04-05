@@ -17,8 +17,8 @@ from funkload.utils import Data
 
 import macauthlib
 from webob import Request
+from browserid.tests.support import make_assertion
 from mozsvc.user.whoauth import SagradaMACAuthPlugin
-from tokenserver.tests.support import get_assertion
 
 
 VERSION = '1.0'
@@ -35,7 +35,7 @@ class StressTest(FunkLoadTestCase):
         except NoOptionError:
             self.token_server_url = None
             secrets_file = self.conf_get("main", "secrets_file")
-            auth_plugin = SagradaMACAuthPlugin(secrets_file=secrets_file)
+            self.auth_plugin = SagradaMACAuthPlugin(secrets_file=secrets_file)
             nodes = self.conf_get("main", "endpoint_nodes").split("\n")
             nodes = [node.strip() for node in nodes]
             nodes = [node for node in nodes if not node.startswith("#")]
@@ -108,11 +108,12 @@ class StressTest(FunkLoadTestCase):
             endpoint_node = random.choice(self.endpoint_nodes)
             req = Request.blank(endpoint_node)
             token, secret = self.auth_plugin.encode_mac_id(req, {"uid": uid})
-            endpoint_url = endpoint_node + "/%s/%s/" % (VERSION, uid)
+            endpoint_url = endpoint_node + "/%s/%s" % (VERSION, uid)
         else:
             email = "user_%s@loadtest.local" % (uid,)
             self.logd("requesting token for %s" % (email,))
-            assertion = get_assertion(email, issuer="loadtest.local")
+            assertion = make_assertion(email, audience="*",
+                                       issuer="loadtest.local")
             token_url = self.token_server_url + "/1.0/aitc/1.0"
             self.addHeader("Authorization", "Browser-ID " + assertion)
             response = self.get(token_url)
