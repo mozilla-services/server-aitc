@@ -24,6 +24,7 @@ def includeme(config):
 
 def main(global_config, **settings):
     config = get_configurator(global_config, **settings)
-    load_from_settings('metlog', config.registry.settings)
+    metlog_wrapper = load_from_settings('metlog', config.registry.settings)
+    config.registry['metlog'] = metlog_wrapper.client
     config.include(includeme)
     return config.make_wsgi_app()
