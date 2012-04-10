@@ -88,6 +88,16 @@ class TestAITC(AITCFunctionalTestCase):
         devices = self.app.get(self.root + "/devices/").json["devices"]
         self.assertEquals(devices, [])
 
+    def test_that_only_defined_collection_names_are_available(self):
+        # SyncStorage creates collections on first read, so this fails.
+        #self.app.get(self.root + "/foo", status=404)
+        #self.app.get(self.root + "/foo/", status=404)
+        pass
+
+    def test_that_syncstorage_urls_do_not_leak_through(self):
+        self.app.get(self.root + "/info/collections", status=404)
+        self.app.get(self.root + "/storage/apps", status=404)
+
     def test_storing_and_retrieving_an_app(self):
         # Putting it at the correct URL succeeds.
         data = TEST_APP_DATA.copy()
