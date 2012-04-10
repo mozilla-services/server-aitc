@@ -222,7 +222,11 @@ class TestAITC(AITCFunctionalTestCase):
         # With "full" we get the full data output.
         apps = self.app.get(self.root + "/apps/?full=1").json["apps"]
         self.assertEquals(len(apps), 2)
-        for app, data in zip(apps, (data1, data2)):
+        # Sort the apps and output by origin so we easily compare in a loop.
+        apps = [(app["origin"], app) for app in apps]
+        apps = [app for (origin, app) in sorted(apps)]
+        # Make sure we got *all* the data back correctly.
+        for app, data in zip(apps, [data2, data1]):
             del app["modifiedAt"]
             self.assertEquals(app, data)
 
