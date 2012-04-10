@@ -58,8 +58,9 @@ class StressTest(FunkLoadTestCase):
         url = endpoint_url + "/apps/"
         self.setMACAuthHeader("GET", url, token, secret)
         response = self.get(url)
+        # The list of apps may not be empty, if we happen to be usinga a uid
+        # that has already been used.  Just sanity-check that it parses.
         apps = json.loads(response.body)["apps"]
-        self.assertEquals(len(apps), 0)
 
         TEST_APP_DATA = {
             "origin": "https://example.com",
@@ -74,7 +75,7 @@ class StressTest(FunkLoadTestCase):
         for x in range(self._pick_weighted_count(put_count_distribution)):
             self.setOkCodes([201, 204])
             data = TEST_APP_DATA.copy()
-            data["origin"] = "https://example%d.com" % (x,)
+            data["origin"] = origin = "https://example%d.com" % (x,)
             id = hashlib.sha1(data["origin"]).digest()
             id = base64.urlsafe_b64encode(id).rstrip("=")
             url = endpoint_url + "/apps/" + id
@@ -87,8 +88,14 @@ class StressTest(FunkLoadTestCase):
             url = endpoint_url + "/apps/"
             self.setMACAuthHeader("GET", url, token, secret)
             response = self.get(url)
+            # Make sure that the app we just uploaded is included
+            # in the list of apps.
             apps = json.loads(response.body)["apps"]
-            self.assertEquals(len(apps), x + 1)
+            for app in apps:
+                if app["origin"] == origin:
+                    break
+            else:
+                assert False, "uploaded app was not included in list"
 
     def _pick_weighted_count(self, weights):
         target = random.randint(1, sum(weights))
