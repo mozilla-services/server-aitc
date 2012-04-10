@@ -31,7 +31,7 @@ class StressTest(FunkLoadTestCase):
         # Should we use a tokenserver or synthesize our own?
         try:
             self.token_server_url = self.conf_get("main", "token_server_url")
-            self.logd("using tokenserver at %s" % (self.token_server_url,))
+            self.logi("using tokenserver at %s" % (self.token_server_url,))
         except NoOptionError:
             self.token_server_url = None
             secrets_file = self.conf_get("main", "secrets_file")
@@ -40,7 +40,7 @@ class StressTest(FunkLoadTestCase):
             nodes = [node.strip() for node in nodes]
             nodes = [node for node in nodes if not node.startswith("#")]
             self.endpoint_nodes = nodes
-            self.logd("using secrets_file from %s" % (secrets_file,))
+            self.logi("using secrets_file from %s" % (secrets_file,))
 
     def setMACAuthHeader(self, method, url, token, secret):
         """Set the Sagrada MAC Auth header using the given credentials."""
@@ -49,6 +49,26 @@ class StressTest(FunkLoadTestCase):
         macauthlib.sign_request(req, token, secret)
         self.clearHeaders()
         self.addHeader("Authorization", req.environ["HTTP_AUTHORIZATION"])
+
+    def get(self, url, *args, **kwds):
+        self.logi("GET: " + url)
+        try:
+            result = super(StressTest, self).get(url, *args, **kwds)
+        except Exception, e:
+            self.logi("    FAIL: " + str(e))
+        else:
+            self.logi("    OK: " + str(result))
+            return result
+
+    def put(self, url, *args, **kwds):
+        self.logi("PUT: " + url)
+        try:
+            result = super(StressTest, self).put(url, *args, **kwds)
+        except Exception, e:
+            self.logi("    FAIL: " + str(e))
+        else:
+            self.logi("    OK: " + str(result))
+            return result
 
     def test_app_storage_session(self):
         token, secret, endpoint_url = self._generate_token()
@@ -80,7 +100,7 @@ class StressTest(FunkLoadTestCase):
             id = base64.urlsafe_b64encode(id).rstrip("=")
             url = endpoint_url + "/apps/" + id
             data = Data('application/json', json.dumps(data))
-            self.logd("about to PUT (x=%d) %s" % (x, url))
+            self.logi("about to PUT (x=%d) %s" % (x, url))
             self.setMACAuthHeader("PUT", url, token, secret)
             response = self.put(url, params=data)
 
@@ -111,14 +131,14 @@ class StressTest(FunkLoadTestCase):
         uid = random.randint(1, 950)
         # Use the tokenserver if configured, otherwise fake it ourselves.
         if self.token_server_url is None:
-            self.logd("synthesizing token for uid %s" % (uid,))
+            self.logi("synthesizing token for uid %s" % (uid,))
             endpoint_node = random.choice(self.endpoint_nodes)
             req = Request.blank(endpoint_node)
             token, secret = self.auth_plugin.encode_mac_id(req, {"uid": uid})
             endpoint_url = endpoint_node + "/%s/%s" % (VERSION, uid)
         else:
             email = "user_%s@loadtest.local" % (uid,)
-            self.logd("requesting token for %s" % (email,))
+            self.logi("requesting token for %s" % (email,))
             assertion = make_assertion(email, audience="*",
                                        issuer="loadtest.local")
             token_url = self.token_server_url + "/1.0/aitc/1.0"
@@ -129,6 +149,6 @@ class StressTest(FunkLoadTestCase):
             secret = credentials["key"].encode("ascii")
             endpoint_url = credentials["api_endpoint"]
 
-        self.logd("assigned endpoint_url %s" % (endpoint_url))
+        self.logi("assigned endpoint_url %s" % (endpoint_url))
         return token, secret, endpoint_url
 
