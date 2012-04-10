@@ -4,16 +4,10 @@
 
 from syncstorage.tests.functional.support import StorageFunctionalTestCase
 
-from mozsvc.metrics import setup_metlog
-
 
 class AITCFunctionalTestCase(StorageFunctionalTestCase):
 
-    def get_test_configurator(self):
-        # This misuse of super() is intentional.
-        # I want to avoid the StorageFunctionalTestCase itself, so
-        # that we don't wind up including the syncstorage app.
-        config = super(StorageFunctionalTestCase, self).get_test_configurator()
-        setup_metlog(config.registry.settings.getsection('metlog'))
+    def get_configurator(self):
+        config = super(AITCFunctionalTestCase, self).get_configurator()
         config.include("aitc")
         return config

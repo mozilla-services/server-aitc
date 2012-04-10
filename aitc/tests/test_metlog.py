@@ -20,17 +20,13 @@ class TestMetlog(TestCase):
 
     def tearDown(self):
         teardown_metlog()
-        # clear the threadlocal
-        self.config.end()
         super(TestMetlog, self).tearDown()
 
-    def get_test_configurator(self):
-        config = super(TestMetlog, self).get_test_configurator()
+    def get_configurator(self):
+        config = super(TestMetlog, self).get_configurator()
         metlog_wrapper = load_from_settings('metlog', config.registry.settings)
         self.metlog = metlog_wrapper.client
         config.registry['metlog'] = self.metlog
-        # put it into the threadlocal
-        config.begin()
         config.include("aitc")
         return config
 

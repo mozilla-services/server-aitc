@@ -17,8 +17,8 @@ import aitc
 TEST_INI_FILE = os.path.join(os.path.dirname(__file__), "tests.ini")
 
 
-class TestsThatOnlyServeToIncreaseLOCCoverage(unittest.TestCase):
-    """Suite of miscellanrous tests that increase line coverage.
+class TestMisc(unittest.TestCase):
+    """Suite of miscellaneous tests that increase line coverage.
 
     These tests don't really test any functionality, they just run
     various frameworky lines of code to check for obvious errors like
