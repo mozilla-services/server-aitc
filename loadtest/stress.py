@@ -108,7 +108,7 @@ class StressTest(FunkLoadTestCase):
 
     def _generate_token(self):
         """Pick an identity, log in and generate the auth token."""
-        uid = random.randint(1, 1000000)
+        uid = random.randint(1, 950)
         # Use the tokenserver if configured, otherwise fake it ourselves.
         if self.token_server_url is None:
             self.logd("synthesizing token for uid %s" % (uid,))
