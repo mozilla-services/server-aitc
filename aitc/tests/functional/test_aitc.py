@@ -84,7 +84,8 @@ class TestAITC(AITCFunctionalTestCase):
         self.assertEquals(apps, [])
         devices = self.app.get(self.root + "/devices/").json["devices"]
         for device in devices:  # pragma: nocover
-            self.app.delete(self.root + "/devices/" + device["uuid"])
+            id = device["uuid"].encode("ascii")
+            self.app.delete(self.root + "/devices/" + id)
         devices = self.app.get(self.root + "/devices/").json["devices"]
         self.assertEquals(devices, [])
 
@@ -406,4 +407,4 @@ if __name__ == "__main__":
     suite = unittest2.TestSuite()
     suite.addTest(unittest2.makeSuite(TestAITC))
     res = unittest2.TextTestRunner(stream=sys.stderr).run(suite)
-    sys.exit(res)
+    sys.exit(0 if res.wasSuccessful() else 1)
