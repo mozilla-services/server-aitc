@@ -182,13 +182,13 @@ class TestAITC(AITCFunctionalTestCase):
         data1 = TEST_APP_DATA.copy()
         id1 = origin_to_id(data1["origin"])
         r = self.app.put_json(self.root + "/apps/" + id1, data1)
-        ts1 = int(r.headers["X-Timestamp"])
+        ts1 = int(r.headers["X-Last-Modified"])
         time.sleep(0.01)
         data2 = TEST_APP_DATA.copy()
         data2["origin"] = "http://testapp.com"
         id2 = origin_to_id(data2["origin"])
         r = self.app.put_json(self.root + "/apps/" + id2, data2)
-        ts2 = int(r.headers["X-Timestamp"])
+        ts2 = int(r.headers["X-Last-Modified"])
         # With no "after" qualifier", both apps are listed.
         apps = self.app.get(self.root + "/apps/")
         self.assertEquals(len(apps.json["apps"]), 2)
@@ -237,7 +237,7 @@ class TestAITC(AITCFunctionalTestCase):
         data1 = TEST_APP_DATA.copy()
         id1 = origin_to_id(data1["origin"])
         r = self.app.put_json(self.root + "/apps/" + id1, data1)
-        ts1 = int(r.headers["X-Timestamp"])
+        ts1 = int(r.headers["X-Last-Modified"])
         time.sleep(0.01)
         # No X-I-M-S header => full listing.
         apps = self.app.get(self.root + "/apps/", status=200)
@@ -257,7 +257,7 @@ class TestAITC(AITCFunctionalTestCase):
         data2["origin"] = "http://testapp.com"
         id2 = origin_to_id(data2["origin"])
         r = self.app.put_json(self.root + "/apps/" + id2, data2)
-        ts2 = int(r.headers["X-Timestamp"])
+        ts2 = int(r.headers["X-Last-Modified"])
         time.sleep(0.01)
         headers = {"X-If-Modified-Since": str(ts1 + 1)}
         apps = self.app.get(self.root + "/apps/", headers=headers, status=200)
@@ -279,7 +279,7 @@ class TestAITC(AITCFunctionalTestCase):
         del data["modifiedAt"]
         id = origin_to_id(data["origin"])
         r = self.app.put_json(self.root + "/apps/" + id, data)
-        ts = int(r.headers["X-Timestamp"])
+        ts = int(r.headers["X-Last-Modified"])
         time.sleep(0.01)
         # No X-I-M-S header => we get the app data.
         app = self.app.get(self.root + "/apps/" + id).json
@@ -311,7 +311,7 @@ class TestAITC(AITCFunctionalTestCase):
         # No X-I-U-S header => we can put an update.
         # The second write gives a 204 No Content.
         r = self.app.put_json(self.root + "/apps/" + id, data, status=204)
-        ts = int(r.headers["X-Timestamp"])
+        ts = int(r.headers["X-Last-Modified"])
         time.sleep(0.01)
         # X-I-U-S header before time of write => 412 Precondition Failed
         headers = {"X-If-Unmodified-Since": str(ts - 1)}
@@ -321,7 +321,7 @@ class TestAITC(AITCFunctionalTestCase):
         headers = {"X-If-Unmodified-Since": str(ts)}
         r = self.app.put_json(self.root + "/apps/" + id, data, headers=headers,
                               status=204)
-        ts = int(r.headers["X-Timestamp"])
+        ts = int(r.headers["X-Last-Modified"])
         time.sleep(0.01)
         # X-I-U-S header after time of write => update succeeds.
         headers = {"X-If-Unmodified-Since": str(ts + 1)}
@@ -363,7 +363,7 @@ class TestAITC(AITCFunctionalTestCase):
         data = TEST_APP_DATA.copy()
         id = origin_to_id(data["origin"])
         r = self.app.put_json(self.root + "/apps/" + id, data, status=201)
-        ts = int(r.headers["X-Timestamp"])
+        ts = int(r.headers["X-Last-Modified"])
         time.sleep(0.01)
         # X-I-U-S header equalt to zero => 412 Precondition Failed
         headers = {"X-If-Unmodified-Since": "0"}
