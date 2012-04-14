@@ -42,10 +42,12 @@ class TestMetlog(TestCase):
         req = self.make_request(environ={"HTTP_HOST": "localhost"})
         req.matchdict = {'collection': 'foo'}
         get_collection(req)
+        # The two most recent messages should be from processing that request.
+        # There may be more messages due to e.g. warnings at startup.
         msgs = self.metlog.sender.msgs
-        self.assertEqual(len(msgs), 2)
-        timer_msg = json.loads(msgs[0])
-        wsgi_msg = json.loads(msgs[1])
+        self.assertTrue(len(msgs) >= 2)
+        timer_msg = json.loads(msgs[-2])
+        wsgi_msg = json.loads(msgs[-1])
         self.assertEqual(timer_msg['type'], 'timer')
         self.assertEqual(timer_msg['fields']['name'],
                          'aitc.views:get_collection')

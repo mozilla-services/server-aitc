@@ -9,33 +9,12 @@ import functools
 import StringIO
 from runpy import run_module
 
+from syncstorage.tests.support import restore_env
+
 import aitc
 
 
 TEST_INI_FILE = os.path.join(os.path.dirname(__file__), "tests.ini")
-
-
-def restore_env(*keys):
-    """Decorator that ensures os.environ gets restored after a test.
-
-    Given a list of environment variable keys, this decorator will save the
-    current values of those environment variables at the start of the call
-    and restore them to those values at the end.
-    """
-    def decorator(func):
-        @functools.wraps(func)
-        def wrapper(*args, **kwds):
-            values = [os.environ.get(key) for key in keys]
-            try:
-                return func(*args, **kwds)
-            finally:
-                for key, value in zip(keys, values):
-                    if value is None:
-                        os.environ.pop(key, None)
-                    else:
-                        os.environ[key] = value
-        return wrapper
-    return decorator
 
 
 class TestsThatOnlyServeToIncreaseLOCCoverage(unittest.TestCase):

@@ -20,11 +20,14 @@ import os
 import sys
 import time
 
+from syncstorage.tests.support import restore_env
+
 from aitc.records import origin_to_id
 from aitc.tests.functional.support import AITCFunctionalTestCase
 
 import macauthlib
 
+from mozsvc.exceptions import BackendError
 from mozsvc.user.whoauth import SagradaMACAuthPlugin
 
 
@@ -394,6 +397,30 @@ class TestAITC(AITCFunctionalTestCase):
     def test_that_uploads_to_unknown_collection_give_a_404_response(self):
         data = TEST_APP_DATA.copy()
         self.app.put_json(self.root + "/oops/TESTAPP", data, status=404)
+
+
+class TestAITCMemcached(TestAITC):
+    """AITC testcases run against the memcached backend, if available."""
+
+    @restore_env("MOZSVC_TEST_INI_FILE")
+    def setUp(self):
+        # Force use of the memcached-specific config file.
+        # If we can't initialize due to an ImportError or BackendError,
+        # assume that memcache is down and skip the test.
+        os.environ["MOZSVC_TEST_INI_FILE"] = "tests-memcached.ini"
+        try:
+            super(TestAITCMemcached, self).setUp()
+            # Check that it's actualy usable
+            storage = self.config.registry.get("syncstorage:storage:default")
+            storage.cache.get("test")
+        except (ImportError, BackendError):
+            raise unittest2.SkipTest()
+
+    def _cleanup_test_databases(self):
+        storage = self.config.registry.get("syncstorage:storage:default")
+        if storage:
+            storage.cache.flush_all()
+        super(TestAITCMemcached, self)._cleanup_test_databases()
 
 
 if __name__ == "__main__":
