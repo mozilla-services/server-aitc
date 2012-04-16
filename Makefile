@@ -71,6 +71,10 @@ build_rpms:
 	wget -O /tmp/pyzmq-2.1.11.tar.gz https://github.com/zeromq/pyzmq/tarball/v2.1.11
 	$(PYPI2RPM) --dist-dir=$(CURDIR)/rpms /tmp/pyzmq-2.1.11.tar.gz
 	rm -f /tmp/pyzmq-2.1.11.tar.gz
+	# We need some extra patches to gevent_zeromq
+	wget -O /tmp/master.zip https://github.com/tarekziade/gevent-zeromq/zipball/master --no-check-certificate
+	bin/pypi2rpm.py /tmp/master.zip --dist-dir=$(CURDIR)/rpms
+	rm -f /tmp/master.zip
 	# The simplejson rpms conflict with a RHEL6 system package.
 	# Do a custom build so that they can overwrite rather than conflict.
 	rm -f $(CURDIR)/rpms/python26-simplejson-2.4.0-1.x86_64.rpm

@@ -1,6 +1,13 @@
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
+try:
+    from gevent import monkey
+    from gevent_zeromq import monkey_patch
+    monkey.patch_all()
+    monkey_patch()
+except ImportError:
+    pass
 
 from mozsvc.config import get_configurator
 from mozsvc.plugin import load_from_settings
