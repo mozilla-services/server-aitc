@@ -4,6 +4,8 @@
 
 import traceback
 
+from pyramid.httpexceptions import WSGIHTTPException
+
 
 def log_all_errors(handler, registry):
     """Tween to log all errors via metlog."""
@@ -11,6 +13,8 @@ def log_all_errors(handler, registry):
     def log_all_errors_tween(request):
         try:
             return handler(request)
+        except WSGIHTTPException:
+            raise
         except Exception:
             logger = request.registry["metlog"]
             err = traceback.format_exc()
