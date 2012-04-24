@@ -19,6 +19,7 @@ import unittest2
 import os
 import sys
 import time
+import webtest
 
 from syncstorage.tests.support import restore_env
 
@@ -414,6 +415,10 @@ class TestAITCMemcached(TestAITC):
             storage = self.config.registry.get("syncstorage:storage:default")
             storage.cache.get("test")
         except (ImportError, BackendError):
+            raise unittest2.SkipTest()
+        except webtest.AppError, e:
+            if "503" not in str(e):
+                raise
             raise unittest2.SkipTest()
 
     def _cleanup_test_databases(self):
