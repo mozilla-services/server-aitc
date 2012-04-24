@@ -16,6 +16,10 @@ from aitc.controller import AITCController
 
 
 def includeme(config):
+    # Add exception logging.
+    # Putting it first prevents other things from converting errors
+    # into HTTP responses before we get to see them.
+    config.include("aitc.tweens")
     # Include the basic mozsvc project dependencies.
     config.include("cornice")
     config.include("mozsvc")
