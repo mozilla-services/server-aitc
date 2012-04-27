@@ -5,8 +5,8 @@
 import json
 
 from aitc.views import get_collection
+from metlog.decorators.base import MetlogDecorator
 from metlog.senders import DebugCaptureSender
-from mozsvc.metrics import teardown_metlog
 from mozsvc.plugin import load_from_settings
 from mozsvc.tests.support import TestCase
 
@@ -19,13 +19,19 @@ class TestMetlog(TestCase):
         return req
 
     def tearDown(self):
-        teardown_metlog()
+        # restore MetlogDecorator's `client` property
+        MetlogDecorator.client = self.orig_client
         super(TestMetlog, self).tearDown()
 
     def get_configurator(self):
         config = super(TestMetlog, self).get_configurator()
         metlog_wrapper = load_from_settings('metlog', config.registry.settings)
         self.metlog = metlog_wrapper.client
+
+        # override MetlogDecorator's `client` property
+        self.orig_client = MetlogDecorator.client
+        MetlogDecorator.client = self.metlog
+
         config.registry['metlog'] = self.metlog
         config.include("aitc")
         return config
@@ -47,10 +53,10 @@ class TestMetlog(TestCase):
         wsgi_msg = json.loads(msgs[-1])
         self.assertEqual(timer_msg['type'], 'timer')
         self.assertEqual(timer_msg['fields']['name'],
-                         'aitc.views:get_collection')
+                         'aitc.views.get_collection')
         self.assertEqual(counter_msg['type'], 'counter')
         self.assertEqual(counter_msg['fields']['name'],
-                         'aitc.views:get_collection')
+                         'aitc.views.get_collection')
         self.assertEqual(wsgi_msg['type'], 'wsgi')
         self.assertEqual(wsgi_msg['fields']['headers'],
                          {'path': '/', 'host': 'localhost',
