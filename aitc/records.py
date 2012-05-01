@@ -37,9 +37,12 @@ class Record(dict):
             raise ValueError(msg % (cls_name, type(data),))
 
         for name, value in data_items:
-            if name not in self.FIELDS:
-                cls_name = self.__class__.__name__
-                raise ValueError("Unknown %s field %r" % (cls_name, name,))
+            # We accept arbitrary fields during initial client development.
+            # Once the list of required fields is stable, we'll re-enable
+            # this to explicit reject unknown fields.
+            #if name not in self.FIELDS:
+            #    cls_name = self.__class__.__name__
+            #    raise ValueError("Unknown %s field %r" % (cls_name, name,))
             if value is not None:
                 self[name] = value
 
@@ -59,8 +62,8 @@ class Record(dict):
 class AppRecord(Record):
     """Class for working with App record data."""
 
-    FIELDS = set(("origin", "manifestPath", "installOrigin",
-                  "installedAt", "modifiedAt", "receipts"))
+    FIELDS = set(("origin", "manifestPath", "installOrigin", "installedAt",
+                  "modifiedAt", "name", "deleted", "receipts"))
 
     def get_id(self):
         return origin_to_id(self["origin"])
@@ -84,6 +87,11 @@ class AppRecord(Record):
                 if not isinstance(self[field], basestring):
                     return False, "%s must be a string" % (field,)
 
+            # Check that the name is a string.
+            field = "name"
+            if not isinstance(self[field], basestring):
+                return False, "name must be a string"
+
             # Check that timestamps are integers.
             for field in ("installedAt", "modifiedAt"):
                 if not isinstance(self[field], (int, long)):
@@ -97,6 +105,10 @@ class AppRecord(Record):
             for receipt in receipts:
                 if not isinstance(receipt, basestring):
                     return False, "receipts must be a list of strings"
+
+            # Check that deleted, if present, is boolean true.
+            if self.get("deleted") not in (None, True):
+                return False, "deleted must be boolean true"
         except KeyError:
             return False, "missing field %r" % (field,)
 

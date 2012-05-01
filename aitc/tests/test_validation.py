@@ -8,11 +8,14 @@ from aitc.records import AppRecord, DeviceRecord
 
 class TestRecordHandling(unittest.TestCase):
 
-    def test_that_unknown_fields_are_rejected(self):
-        self.assertRaises(ValueError, AppRecord, {'boooo': ''})
-        self.assertRaises(ValueError, AppRecord, {42: '17'})
-        self.assertRaises(ValueError, DeviceRecord, {'boooo': ''})
-        self.assertRaises(ValueError, DeviceRecord, {42: '17'})
+# Unknown fields will be accepted during initial client development.
+# Once the set of required fields is stable, we'll re-enable this test.
+#
+#    def test_that_unknown_fields_are_rejected(self):
+#        self.assertRaises(ValueError, AppRecord, {'boooo': ''})
+#        self.assertRaises(ValueError, AppRecord, {42: '17'})
+#        self.assertRaises(ValueError, DeviceRecord, {'boooo': ''})
+#        self.assertRaises(ValueError, DeviceRecord, {42: '17'})
 
     def test_validation_of_app_records(self):
         app = AppRecord()
@@ -25,9 +28,16 @@ class TestRecordHandling(unittest.TestCase):
             "installOrigin": "https://marketplace.mozilla.org",
             "installedAt": 1330535996745,
             "modifiedAt": 1330535996945,
+            "name": "Examplinator 3000",
             "receipts": ["receipt1", "receipt2"],
         }
         app = AppRecord(good_data)
+        ok, error = app.validate()
+        self.assertTrue(ok)
+
+        good_data_deleted = good_data.copy()
+        good_data_deleted["deleted"] = True
+        app = AppRecord(good_data_deleted)
         ok, error = app.validate()
         self.assertTrue(ok)
 
@@ -39,6 +49,12 @@ class TestRecordHandling(unittest.TestCase):
 
         bad_data = good_data.copy()
         bad_data["origin"] = 42
+        app = AppRecord(bad_data)
+        ok, error = app.validate()
+        self.assertFalse(ok)
+
+        bad_data = good_data.copy()
+        bad_data["name"] = ["name", "must", "be", "a", "string"]
         app = AppRecord(bad_data)
         ok, error = app.validate()
         self.assertFalse(ok)
@@ -57,6 +73,12 @@ class TestRecordHandling(unittest.TestCase):
 
         bad_data = good_data.copy()
         bad_data["receipts"] = ["I", "HACK", "YOU", 42]
+        app = AppRecord(bad_data)
+        ok, error = app.validate()
+        self.assertFalse(ok)
+
+        bad_data = good_data.copy()
+        bad_data["deleted"] = "true"
         app = AppRecord(bad_data)
         ok, error = app.validate()
         self.assertFalse(ok)
@@ -122,6 +144,7 @@ class TestRecordHandling(unittest.TestCase):
             "installOrigin": "https://marketplace.mozilla.org",
             "installedAt": 1330535996745,
             "modifiedAt": 1330535996945,
+            "name": "Examplinator 3000",
             "receipts": ["receipt1", "receipt2"],
         }
 
