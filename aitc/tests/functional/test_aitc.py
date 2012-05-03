@@ -21,15 +21,13 @@ import sys
 import time
 import webtest
 
+from mozsvc.exceptions import BackendError
+
 from syncstorage.tests.support import restore_env
+from syncstorage.tests.functional.support import run_live_functional_tests
 
 from aitc.records import origin_to_id
 from aitc.tests.functional.support import AITCFunctionalTestCase
-
-import macauthlib
-
-from mozsvc.exceptions import BackendError
-from mozsvc.user.whoauth import SagradaMACAuthPlugin
 
 
 TEST_APP_DATA = {
@@ -64,21 +62,6 @@ class TestAITC(AITCFunctionalTestCase):
         super(TestAITC, self).setUp()
 
         self.root = "/1.0/" + str(self.user_id)
-
-        # Create a SagradaMACAuthPlugin from our deployment settings,
-        # so that we can generate valid authentication tokens.
-        settings = self.config.registry.settings
-        macauth_settings = settings.getsection("who.plugin.macauth")
-        macauth_settings.pop("use", None)
-        auth_plugin = SagradaMACAuthPlugin(**macauth_settings)
-
-        # Monkey-patch the app to sign all requests with a macauth token.
-        def new_do_request(req, *args, **kwds):
-            id, key = auth_plugin.encode_mac_id(req, {"uid": self.user_id})
-            macauthlib.sign_request(req, id, key)
-            return orig_do_request(req, *args, **kwds)
-        orig_do_request = self.app.do_request
-        self.app.do_request = new_do_request
 
         # Reset the storage to a known state (aka "empty").
         apps = self.app.get(self.root + "/apps/").json["apps"]
@@ -432,16 +415,5 @@ class TestAITCMemcached(TestAITC):
 if __name__ == "__main__":
     # When run as a script, this file will execute the
     # functional tests against a live webserver.
-
-    if not 2 <= len(sys.argv) <= 3:
-        print >> sys.stderr, "USAGE: test_aitc.py <server-url> [<ini-file>]"
-        sys.exit(1)
-
-    os.environ["MOZSVC_TEST_REMOTE"] = sys.argv[1]
-    if len(sys.argv) > 2:
-        os.environ["MOZSVC_TEST_INI_FILE"] = sys.argv[2]
-
-    suite = unittest2.TestSuite()
-    suite.addTest(unittest2.makeSuite(TestAITC))
-    res = unittest2.TextTestRunner(stream=sys.stderr).run(suite)
-    sys.exit(0 if res.wasSuccessful() else 1)
+    res = run_live_functional_tests(TestAITC, sys.argv)
+    sys.exit(res)

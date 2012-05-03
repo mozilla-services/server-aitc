@@ -5,7 +5,6 @@
 import os
 import sys
 import unittest
-import functools
 import StringIO
 from runpy import run_module
 
@@ -64,10 +63,9 @@ class TestMisc(unittest.TestCase):
                 run_module(module, run_name="__main__")
             except (Exception, SystemExit):
                 pass
-            self.assertTrue("USAGE" in sys.stderr.getvalue())
+            self.assertTrue("Usage" in sys.stdout.getvalue())
             # With args, it will run (and fail, but run nonetheless)
             sys.argv.append("http://nonexistant.example.com")
-            sys.argv.append(TEST_INI_FILE)
             try:
                 run_module(module, run_name="__main__")
             except (Exception, SystemExit):
