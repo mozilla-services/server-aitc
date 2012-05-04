@@ -10,6 +10,8 @@ import hashlib
 import random
 import json
 import time
+import urlparse
+from webtest import TestApp
 
 from ConfigParser import NoOptionError
 from funkload.FunkLoadTestCase import FunkLoadTestCase
@@ -25,7 +27,49 @@ VERSION = '1.0'
 put_count_distribution = [0, 18, 67, 9, 4, 2]  # 0% 0 PUTs, 18% 1 PUT, etc.
 
 
-class StressTest(FunkLoadTestCase):
+from webob import Request
+
+from funkload.utils import Data
+
+from aitc.tests.functional.test_aitc import TestAITC
+
+
+class AllOKCodes(object):
+    """Contain that claims to contain everything.
+
+    This lets us fake out the ok_codes checking inside funkload.
+    """
+
+    def __contains__(self, item):
+        return True
+
+
+class FunkLoadWSGIApp(object):
+    """WSGI Application that proxies to a FunkLoadTestCase instance."""
+
+    def __init__(self, flobj):
+        self.flobj = flobj
+
+    def __call__(self, environ, start_response):
+        req = Request(environ)
+        flobj = self.flobj
+        # Set all headers that won't be set automatically by funkload.
+        flobj.clearHeaders()
+        for header, value in req.headers.iteritems():
+            if header.lower() not in ("host",):
+                flobj.setHeader(header, value)
+        # Accept any response code, it will be checked by calling code.
+        flobj.ok_codes = AllOKCodes()
+        resp = flobj.method(req.method, req.url, Data(req.content_type, req.body))
+        start_response(str(resp.code) + " " + resp.message, resp.headers.items())
+        return (resp.body,)
+
+
+class StressTest(FunkLoadTestCase, TestAITC):
+
+    def __init__(self, methodName="runTest", *args, **kwds):
+        FunkLoadTestCase.__init__(self, methodName, *args, **kwds)
+        TestAITC.__init__(self, methodName)
 
     def setUp(self):
         # Should we use a tokenserver or synthesize our own?
@@ -41,6 +85,22 @@ class StressTest(FunkLoadTestCase):
             nodes = [node for node in nodes if not node.startswith("#")]
             self.endpoint_nodes = nodes
             self.logi("using secrets_file from %s" % (secrets_file,))
+        FunkLoadTestCase.setUp(self)
+        TestAITC.setUp(self)
+
+    def _authenticate(self):
+        token, secret, endpoint_url = (s.encode("ascii") for s in self._generate_token())
+        self.auth_token = token
+        self.auth_secret = secret
+        self.endpoint_url = endpoint_url
+        self.user_id = int(endpoint_url.strip("/").rsplit("/", 1)[-1])
+        host_url = urlparse.urlparse(endpoint_url)
+        self.app = TestApp(FunkLoadWSGIApp(self), extra_environ={
+            "HTTP_HOST": host_url.netloc,
+            "wsgi.url_scheme": host_url.scheme or "http",
+            "SERVER_NAME": host_url.hostname,
+            "REMOTE_ADDR": "127.0.0.1",
+        })
 
     def setMACAuthHeader(self, method, url, token, secret):
         """Set the Sagrada MAC Auth header using the given credentials."""
@@ -50,33 +110,23 @@ class StressTest(FunkLoadTestCase):
         self.clearHeaders()
         self.addHeader("Authorization", req.environ["HTTP_AUTHORIZATION"])
 
-    def get(self, url, *args, **kwds):
-        self.logi("GET: " + url)
+    def method(self, *args, **kwds):
+        self.logi("REQUEST: " + str(args) + "  " + str(kwds))
         try:
-            result = super(StressTest, self).get(url, *args, **kwds)
+            response = super(StressTest, self).method(*args, **kwds)
         except Exception, e:
-            self.logi("    FAIL: " + str(e))
+            self.logi("    ERROR: " + str(e))
+            raise
         else:
-            self.logi("    OK: " + str(result))
-            return result
-
-    def put(self, url, *args, **kwds):
-        self.logi("PUT: " + url)
-        try:
-            result = super(StressTest, self).put(url, *args, **kwds)
-        except Exception, e:
-            self.logi("    FAIL: " + str(e))
-        else:
-            self.logi("    OK: " + str(result))
-            return result
+            self.logi("    RESPONSE: " + str(response))
+            self.logi("              " + str(response.body))
+            return response
 
     def test_app_storage_session(self):
-        token, secret, endpoint_url = self._generate_token()
-
         # Initial GET of the (empty) set of apps.
         self.setOkCodes([200])
-        url = endpoint_url + "/apps/"
-        self.setMACAuthHeader("GET", url, token, secret)
+        url = self.endpoint_url + "/apps/"
+        self.setMACAuthHeader("GET", url, self.auth_token, self.auth_secret)
         response = self.get(url)
         # The list of apps may not be empty, if we happen to be usinga a uid
         # that has already been used.  Just sanity-check that it parses.
@@ -88,6 +138,7 @@ class StressTest(FunkLoadTestCase):
             "installOrigin": "https://marketplace.mozilla.org",
             "modifiedAt": 1234,   # this will be overwritten on write
             "installedAt": 1234,  # this will not be overwritten
+            "name": "Examplinator 3000",
             "receipts": ["receipt1", "receipt2"],
         }
 
@@ -98,15 +149,15 @@ class StressTest(FunkLoadTestCase):
             data["origin"] = origin = "https://example%d.com" % (x,)
             id = hashlib.sha1(data["origin"]).digest()
             id = base64.urlsafe_b64encode(id).rstrip("=")
-            url = endpoint_url + "/apps/" + id
+            url = self.endpoint_url + "/apps/" + id
             data = Data('application/json', json.dumps(data))
             self.logi("about to PUT (x=%d) %s" % (x, url))
-            self.setMACAuthHeader("PUT", url, token, secret)
+            self.setMACAuthHeader("PUT", url, self.auth_token, self.auth_secret)
             response = self.put(url, params=data)
 
             self.setOkCodes([200])
-            url = endpoint_url + "/apps/"
-            self.setMACAuthHeader("GET", url, token, secret)
+            url = self.endpoint_url + "/apps/"
+            self.setMACAuthHeader("GET", url, self.auth_token, self.auth_secret)
             response = self.get(url)
             # Make sure that the app we just uploaded is included
             # in the list of apps.
@@ -139,11 +190,12 @@ class StressTest(FunkLoadTestCase):
         else:
             email = "user_%s@loadtest.local" % (uid,)
             self.logi("requesting token for %s" % (email,))
-            assertion = make_assertion(email, audience="*",
+            assertion = make_assertion(email, audience="https://persona.org",
                                        issuer="loadtest.local")
             token_url = self.token_server_url + "/1.0/aitc/1.0"
             self.addHeader("Authorization", "Browser-ID " + assertion)
             response = self.get(token_url)
+            self.logi(response.body)
             credentials = json.loads(response.body)
             token = credentials["id"].encode("ascii")
             secret = credentials["key"].encode("ascii")
