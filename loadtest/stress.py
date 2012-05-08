@@ -128,7 +128,7 @@ class StressTest(FunkLoadTestCase):
 
     def _generate_token(self):
         """Pick an identity, log in and generate the auth token."""
-        uid = random.randint(1, 950)
+        uid = random.randint(1, 1000000)  # existing user
         # Use the tokenserver if configured, otherwise fake it ourselves.
         if self.token_server_url is None:
             self.logi("synthesizing token for uid %s" % (uid,))
@@ -137,9 +137,9 @@ class StressTest(FunkLoadTestCase):
             token, secret = self.auth_plugin.encode_mac_id(req, {"uid": uid})
             endpoint_url = endpoint_node + "/%s/%s" % (VERSION, uid)
         else:
-            email = "user_%s@loadtest.local" % (uid,)
+            email = "user%s@loadtest.local" % (uid,)
             self.logi("requesting token for %s" % (email,))
-            assertion = make_assertion(email, audience="*",
+            assertion = make_assertion(email, audience="persona.org",
                                        issuer="loadtest.local")
             token_url = self.token_server_url + "/1.0/aitc/1.0"
             self.addHeader("Authorization", "Browser-ID " + assertion)
