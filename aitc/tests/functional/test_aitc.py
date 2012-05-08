@@ -96,7 +96,7 @@ class TestAITC(AITCFunctionalTestCase):
         self.assertEquals(len(apps), 1)
         # Putting it at an incorrect URL fails.
         id = origin_to_id("https://evil.com")
-        self.app.put_json(self.root + "/apps/" + id, data, status=400)
+        self.app.put_json(self.root + "/apps/" + id, data, status=403)
         apps = self.app.get(self.root + "/apps/").json["apps"]
         self.assertEquals(len(apps), 1)
         # Reading it back gives us the correct information.
@@ -118,7 +118,7 @@ class TestAITC(AITCFunctionalTestCase):
         self.assertEquals(len(devices), 1)
         # Putting it at an incorrect URL fails.
         bad_id = "8" + data["uuid"][1:]
-        self.app.put_json(self.root + "/devices/" + bad_id, data, status=400)
+        self.app.put_json(self.root + "/devices/" + bad_id, data, status=403)
         devices = self.app.get(self.root + "/devices/").json["devices"]
         self.assertEquals(len(devices), 1)
         # Reading it back gives us the correct information.

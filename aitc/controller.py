@@ -4,7 +4,9 @@
 
 import simplejson as json
 
-from pyramid.httpexceptions import HTTPNotFound, HTTPRequestEntityTooLarge
+from pyramid.httpexceptions import (HTTPNotFound,
+                                    HTTPForbidden,
+                                    HTTPRequestEntityTooLarge)
 
 from mozsvc.exceptions import ERROR_MALFORMED_JSON, ERROR_INVALID_OBJECT
 
@@ -64,8 +66,11 @@ class AITCController(object):
             raise HTTPJsonBadRequest(ERROR_MALFORMED_JSON)
         item = self._parse_item(request, data)
         # Check that we're putting it with the right id.
+        # Unfortunately we have to *return* the error response here
+        # rather than raise it, because raising HTTPForbidden will
+        # trigger pyramid's prompt-for-credentials handlers.
         if request.matchdict["item"] != item.get_id():
-            raise HTTPJsonBadRequest(ERROR_INVALID_OBJECT)
+            return HTTPForbidden("Item ID does not match origin")
         # Pass through to storage.
         # Requires another round-trip through JSON; yuck.
         request.body = json.dumps({"payload": json.dumps(item)})
