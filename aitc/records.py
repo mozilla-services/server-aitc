@@ -141,6 +141,8 @@ class DeviceRecord(Record):
             for field in ("name", "type", "layout"):
                 if not isinstance(self[field], basestring):
                     return False, "%s must be a string" % (field,)
+                elif not self[field]:
+                    return False, "%s must be non-empty" % (field,)
 
             # Check that timestamps are integers.
             for field in ("addedAt", "modifiedAt"):

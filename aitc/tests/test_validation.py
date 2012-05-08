@@ -126,6 +126,24 @@ class TestRecordHandling(unittest.TestCase):
         self.assertFalse(ok)
 
         bad_data = good_data.copy()
+        bad_data["name"] = ""
+        device = DeviceRecord(bad_data)
+        ok, error = device.validate()
+        self.assertFalse(ok)
+
+        bad_data = good_data.copy()
+        bad_data["type"] = ""
+        device = DeviceRecord(bad_data)
+        ok, error = device.validate()
+        self.assertFalse(ok)
+
+        bad_data = good_data.copy()
+        bad_data["layout"] = ""
+        device = DeviceRecord(bad_data)
+        ok, error = device.validate()
+        self.assertFalse(ok)
+
+        bad_data = good_data.copy()
         bad_data["modifiedAt"] = "42"
         device = DeviceRecord(bad_data)
         ok, error = device.validate()
