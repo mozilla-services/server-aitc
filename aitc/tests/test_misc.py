@@ -5,7 +5,6 @@
 import os
 import sys
 import unittest
-import functools
 import StringIO
 from runpy import run_module
 
