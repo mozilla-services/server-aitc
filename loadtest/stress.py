@@ -88,6 +88,7 @@ class StressTest(FunkLoadTestCase):
             "installOrigin": "https://marketplace.mozilla.org",
             "modifiedAt": 1234,   # this will be overwritten on write
             "installedAt": 1234,  # this will not be overwritten
+            "name": "Examplinator 3000",
             "receipts": ["receipt1", "receipt2"],
         }
 
