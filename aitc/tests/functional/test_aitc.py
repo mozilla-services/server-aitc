@@ -367,21 +367,23 @@ class TestAITC(AITCFunctionalTestCase):
         self.app.delete(self.root + "/apps/NONEXISTENT", status=404)
 
     def test_that_uploading_invalid_json_gives_a_400_response(self):
+        id = origin_to_id("http://broken-app.com")
         data = "NOT JSON"
-        self.app.put(self.root + "/apps/TESTAPP", data, status=400)
+        self.app.put(self.root + "/apps/" + id, data, status=400)
         data = 42
-        self.app.put_json(self.root + "/apps/TESTAPP", data, status=400)
+        self.app.put_json(self.root + "/apps/" + id, data, status=400)
         data = ["NOT", "AN", "OBJECT"]
-        self.app.put_json(self.root + "/apps/TESTAPP", data, status=400)
+        self.app.put_json(self.root + "/apps/" + id, data, status=400)
         data = {"invalid": "field"}
-        self.app.put_json(self.root + "/apps/TESTAPP", data, status=400)
+        self.app.put_json(self.root + "/apps/" + id, data, status=400)
         data = TEST_APP_DATA.copy()
         data.pop("manifestPath")
-        self.app.put_json(self.root + "/apps/TESTAPP", data, status=400)
+        self.app.put_json(self.root + "/apps/" + id, data, status=400)
 
     def test_that_uploads_to_unknown_collection_give_a_404_response(self):
         data = TEST_APP_DATA.copy()
-        self.app.put_json(self.root + "/oops/TESTAPP", data, status=404)
+        id = origin_to_id(data["origin"])
+        self.app.put_json(self.root + "/oops/" + id, data, status=404)
 
 
 class TestAITCMemcached(TestAITC):
