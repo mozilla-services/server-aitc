@@ -49,7 +49,7 @@ class Record(dict):
     def get_id(self):
         raise NotImplementedError  # pragma: nocover
 
-    def populate(self, request):
+    def populate(self, request, old_item=None):
         self["modifiedAt"] = request.server_time
 
     def abbreviate(self):
@@ -68,9 +68,11 @@ class AppRecord(Record):
     def get_id(self):
         return origin_to_id(self["origin"])
 
-    def populate(self, request):
-        super(AppRecord, self).populate(request)
-        if "installedAt" not in self:
+    def populate(self, request, old_item=None):
+        super(AppRecord, self).populate(request, old_item)
+        if old_item is not None:
+            self["installedAt"] = old_item["installedAt"]
+        else:
             self["installedAt"] = request.server_time
 
     def abbreviate(self):
@@ -124,9 +126,11 @@ class DeviceRecord(Record):
     def get_id(self):
         return self["uuid"]
 
-    def populate(self, request):
-        super(DeviceRecord, self).populate(request)
-        if "addedAt" not in self:
+    def populate(self, request, old_item=None):
+        super(DeviceRecord, self).populate(request, old_item)
+        if old_item is not None:
+            self["addedAt"] = old_item["addedAt"]
+        else:
             self["addedAt"] = request.server_time
 
     def abbreviate(self):

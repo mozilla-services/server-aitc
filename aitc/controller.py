@@ -92,8 +92,14 @@ class AITCController(object):
             item = RecordClass(data)
         except ValueError:
             raise HTTPJsonBadRequest(ERROR_INVALID_OBJECT)
+        # Get any existing values for that item.
+        try:
+            old_bso = self.controller.get_item(request)
+            old_item = json.loads(old_bso["payload"])
+        except HTTPNotFound:
+            old_item = None
         # Fill in missing values and validate.
-        item.populate(request)
+        item.populate(request, old_item)
         ok, error = item.validate()
         if not ok:
             raise HTTPJsonBadRequest(ERROR_INVALID_OBJECT)

@@ -34,8 +34,6 @@ TEST_APP_DATA = {
     "origin": "https://example.com",
     "manifestPath": "/manifest.webapp",
     "installOrigin": "https://marketplace.mozilla.org",
-    "modifiedAt": 1234,   # this will be overwritten on write
-    "installedAt": 1234,  # this will not be overwritten
     "name": "Examplinator 3000",
     "receipts": ["receipt1", "receipt2"],
 }
@@ -45,8 +43,6 @@ TEST_DEVICE_DATA = {
     "name": "Anant's Mac Pro",
     "type": "mobile",
     "layout": "android/phone",
-    "modifiedAt": 1234,  # this will be overwritten on write
-    "addedAt": 1234,     # this will not be overwritten
     "apps": {"foo": "bar"},
 }
 
@@ -94,6 +90,7 @@ class TestAITC(AITCFunctionalTestCase):
         self.app.put_json(self.root + "/apps/" + id, data)
         apps = self.app.get(self.root + "/apps/").json["apps"]
         self.assertEquals(len(apps), 1)
+        self.assertEquals(apps[0]["origin"], data["origin"])
         # Putting it at an incorrect URL fails.
         id = origin_to_id("https://evil.com")
         self.app.put_json(self.root + "/apps/" + id, data, status=403)
@@ -101,10 +98,15 @@ class TestAITC(AITCFunctionalTestCase):
         self.assertEquals(len(apps), 1)
         # Reading it back gives us the correct information.
         id = origin_to_id(data["origin"])
-        app = self.app.get(self.root + "/apps/" + id).json
-        self.assertEquals(app["origin"], data["origin"])
-        self.assertEquals(app["installedAt"], data["installedAt"])
-        self.assertGreater(app["modifiedAt"], data["modifiedAt"])
+        app1 = self.app.get(self.root + "/apps/" + id).json
+        self.assertEquals(app1["origin"], data["origin"])
+        # Writing it again updates the modified time.
+        time.sleep(0.01)
+        self.app.put_json(self.root + "/apps/" + id, data)
+        app2 = self.app.get(self.root + "/apps/" + id).json
+        self.assertEquals(app2["origin"], data["origin"])
+        self.assertEquals(app2["installedAt"], app1["installedAt"])
+        self.assertGreater(app2["modifiedAt"], app1["modifiedAt"])
         # Deleting it makes it go away.
         self.app.delete(self.root + "/apps/" + id, status=204)
         apps = self.app.get(self.root + "/apps/").json["apps"]
@@ -116,17 +118,24 @@ class TestAITC(AITCFunctionalTestCase):
         self.app.put_json(self.root + "/devices/" + data["uuid"], data)
         devices = self.app.get(self.root + "/devices/").json["devices"]
         self.assertEquals(len(devices), 1)
+        self.assertEquals(devices[0]["uuid"], data["uuid"])
         # Putting it at an incorrect URL fails.
         bad_id = "8" + data["uuid"][1:]
         self.app.put_json(self.root + "/devices/" + bad_id, data, status=403)
         devices = self.app.get(self.root + "/devices/").json["devices"]
         self.assertEquals(len(devices), 1)
         # Reading it back gives us the correct information.
-        device = self.app.get(self.root + "/devices/" + data["uuid"]).json
-        self.assertEquals(device["uuid"], data["uuid"])
-        self.assertEquals(device["layout"], data["layout"])
-        self.assertEquals(device["addedAt"], data["addedAt"])
-        self.assertGreater(device["modifiedAt"], data["modifiedAt"])
+        device1 = self.app.get(self.root + "/devices/" + data["uuid"]).json
+        self.assertEquals(device1["uuid"], data["uuid"])
+        self.assertEquals(device1["layout"], data["layout"])
+        # Writing it again updates the modified time.
+        time.sleep(0.01)
+        self.app.put_json(self.root + "/devices/" + data["uuid"], data)
+        device2 = self.app.get(self.root + "/devices/" + data["uuid"]).json
+        self.assertEquals(device2["uuid"], data["uuid"])
+        self.assertEquals(device2["layout"], data["layout"])
+        self.assertEquals(device2["addedAt"], device1["addedAt"])
+        self.assertGreater(device2["modifiedAt"], device1["modifiedAt"])
         # Deleting it makes it go away.
         self.app.delete(self.root + "/devices/" + data["uuid"], status=204)
         devices = self.app.get(self.root + "/devices/").json["devices"]
@@ -134,8 +143,6 @@ class TestAITC(AITCFunctionalTestCase):
 
     def test_that_app_timestamp_fields_are_set_on_write(self):
         data = TEST_APP_DATA.copy()
-        del data["installedAt"]
-        del data["modifiedAt"]
         id = origin_to_id(data["origin"])
         # On first write, both timestamp fields are set to same value.
         self.app.put_json(self.root + "/apps/" + id, data)
@@ -149,8 +156,6 @@ class TestAITC(AITCFunctionalTestCase):
 
     def test_that_device_timestamp_fields_are_set_on_write(self):
         data = TEST_DEVICE_DATA.copy()
-        del data["addedAt"]
-        del data["modifiedAt"]
         id = data["uuid"]
         # On first write, both timestamp fields are set to same value.
         self.app.put_json(self.root + "/devices/" + id, data)
@@ -194,11 +199,9 @@ class TestAITC(AITCFunctionalTestCase):
 
     def test_listing_of_full_app_records(self):
         data1 = TEST_APP_DATA.copy()
-        data1.pop("modifiedAt")
         id1 = origin_to_id(data1["origin"])
         self.app.put_json(self.root + "/apps/" + id1, data1)
         data2 = TEST_APP_DATA.copy()
-        data2.pop("modifiedAt")
         data2["origin"] = "http://testapp.com"
         id2 = origin_to_id(data2["origin"])
         self.app.put_json(self.root + "/apps/" + id2, data2)
@@ -216,6 +219,7 @@ class TestAITC(AITCFunctionalTestCase):
         # Make sure we got *all* the data back correctly.
         for app, data in zip(apps, [data2, data1]):
             del app["modifiedAt"]
+            del app["installedAt"]
             self.assertEquals(app, data)
 
     def test_listing_of_apps_with_x_if_modified_since(self):
@@ -261,7 +265,6 @@ class TestAITC(AITCFunctionalTestCase):
 
     def test_getting_an_app_with_x_if_modified_since(self):
         data = TEST_APP_DATA.copy()
-        del data["modifiedAt"]
         id = origin_to_id(data["origin"])
         r = self.app.put_json(self.root + "/apps/" + id, data)
         ts = int(r.headers["X-Last-Modified"])
@@ -269,11 +272,13 @@ class TestAITC(AITCFunctionalTestCase):
         # No X-I-M-S header => we get the app data.
         app = self.app.get(self.root + "/apps/" + id).json
         del app["modifiedAt"]
+        del app["installedAt"]
         self.assertEquals(app, data)
         # X-I-M-S header before time of write => we get the app data.
         headers = {"X-If-Modified-Since": str(ts - 1)}
         app = self.app.get(self.root + "/apps/" + id).json
         del app["modifiedAt"]
+        del app["installedAt"]
         self.assertEquals(app, data)
         # X-I-M-S header at time of write => 304 Not Modified
         headers = {"X-If-Modified-Since": str(ts)}
@@ -286,6 +291,7 @@ class TestAITC(AITCFunctionalTestCase):
         headers = {"X-If-Modified-Since": str(ts + 1)}
         app = self.app.get(self.root + "/apps/" + id, headers=headers).json
         del app["modifiedAt"]
+        del app["installedAt"]
         self.assertEquals(app, data)
 
     def test_putting_an_app_with_x_if_unmodified_since(self):
