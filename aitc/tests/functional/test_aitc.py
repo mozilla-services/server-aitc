@@ -375,7 +375,7 @@ class TestAITC(AITCFunctionalTestCase):
     def test_that_uploading_invalid_json_gives_a_400_response(self):
         id = origin_to_id("http://broken-app.com")
         data = "NOT JSON"
-        self.app.put(self.root + "/apps/" + id, data, status=400)
+        self.app.put(self.root + "/apps/" + id, data, status=415)
         data = 42
         self.app.put_json(self.root + "/apps/" + id, data, status=400)
         data = ["NOT", "AN", "OBJECT"]

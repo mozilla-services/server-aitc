@@ -6,7 +6,8 @@ import simplejson as json
 
 from pyramid.httpexceptions import (HTTPNotFound,
                                     HTTPForbidden,
-                                    HTTPRequestEntityTooLarge)
+                                    HTTPRequestEntityTooLarge,
+                                    HTTPUnsupportedMediaType)
 
 from mozsvc.exceptions import ERROR_MALFORMED_JSON, ERROR_INVALID_OBJECT
 
@@ -58,6 +59,9 @@ class AITCController(object):
     def set_item(self, request):
         """Upload a new item by ID."""
         # Validate the incoming data.
+        if request.content_type not in ("application/json", None):
+            msg = "Unsupported Media Type: %s" % (request.content_type,)
+            raise HTTPUnsupportedMediaType(msg)
         if len(request.body) > MAX_ITEM_SIZE:
             raise HTTPRequestEntityTooLarge()
         try:
