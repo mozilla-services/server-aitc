@@ -22,7 +22,7 @@ coverage==3.5.1
 docutils==0.8.1
 gevent==0.13.6
 greenlet==0.3.4
-macauthlib==0.1
+macauthlib==0.2
 metlog-py==0.8.4
 mozsvc==0.3
 ordereddict==1.1
