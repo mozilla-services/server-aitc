@@ -47,10 +47,10 @@ class TestMetlog(TestCase):
         wsgi_msg = json.loads(msgs[-1])
         self.assertEqual(timer_msg['type'], 'timer')
         self.assertEqual(timer_msg['fields']['name'],
-                         'aitc.views:get_collection')
+                         'aitc.views.get_collection')
         self.assertEqual(counter_msg['type'], 'counter')
         self.assertEqual(counter_msg['fields']['name'],
-                         'aitc.views:get_collection')
+                         'aitc.views.get_collection')
         self.assertEqual(wsgi_msg['type'], 'wsgi')
         self.assertEqual(wsgi_msg['fields']['headers'],
                          {'path': '/', 'host': 'localhost',
