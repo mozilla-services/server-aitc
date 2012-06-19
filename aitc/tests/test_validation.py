@@ -8,14 +8,15 @@ from aitc.records import AppRecord, DeviceRecord
 
 class TestRecordHandling(unittest.TestCase):
 
-# Unknown fields will be accepted during initial client development.
-# Once the set of required fields is stable, we'll re-enable this test.
-#
-#    def test_that_unknown_fields_are_rejected(self):
-#        self.assertRaises(ValueError, AppRecord, {'boooo': ''})
-#        self.assertRaises(ValueError, AppRecord, {42: '17'})
-#        self.assertRaises(ValueError, DeviceRecord, {'boooo': ''})
-#        self.assertRaises(ValueError, DeviceRecord, {42: '17'})
+    def test_that_unknown_fields_are_rejected(self):
+        self.assertRaises(ValueError, AppRecord, {'boooo': ''})
+        self.assertRaises(ValueError, AppRecord, {42: '17'})
+        AppRecord({'boooo': ''}, ignore_unknown_fields=True)
+        AppRecord({42: '17'}, ignore_unknown_fields=True)
+        self.assertRaises(ValueError, DeviceRecord, {'boooo': ''})
+        self.assertRaises(ValueError, DeviceRecord, {42: '17'})
+        DeviceRecord({'boooo': ''}, ignore_unknown_fields=True)
+        DeviceRecord({42: '17'}, ignore_unknown_fields=True)
 
     def test_validation_of_app_records(self):
         app = AppRecord()

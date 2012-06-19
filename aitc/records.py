@@ -24,7 +24,7 @@ class Record(dict):
 
     FIELDS = set()
 
-    def __init__(self, data=None):
+    def __init__(self, data=None, ignore_unknown_fields=False):
         super(Record, self).__init__()
         if data is None:
             data = {}
@@ -37,12 +37,9 @@ class Record(dict):
             raise ValueError(msg % (cls_name, type(data),))
 
         for name, value in data_items:
-            # We accept arbitrary fields during initial client development.
-            # Once the list of required fields is stable, we'll re-enable
-            # this to explicit reject unknown fields.
-            #if name not in self.FIELDS:
-            #    cls_name = self.__class__.__name__
-            #    raise ValueError("Unknown %s field %r" % (cls_name, name,))
+            if name not in self.FIELDS and not ignore_unknown_fields:
+                cls_name = self.__class__.__name__
+                raise ValueError("Unknown %s field %r" % (cls_name, name,))
             if value is not None:
                 self[name] = value
 

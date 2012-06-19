@@ -36,6 +36,8 @@ class AITCController(object):
 
     def __init__(self, config):
         self.controller = StorageController(config)
+        key = "storage.ignore_unknown_fields"
+        self.ignore_unknown_fields = config.registry.settings.get(key, False)
 
     def get_collection(self, request):
         """Get the list of items from a collection."""
@@ -93,7 +95,8 @@ class AITCController(object):
             raise HTTPNotFound()
         # Load the data into an object of that type.
         try:
-            item = RecordClass(data)
+            kwds = {"ignore_unknown_fields": self.ignore_unknown_fields}
+            item = RecordClass(data, **kwds)
         except ValueError:
             raise HTTPJsonBadRequest(ERROR_INVALID_OBJECT)
         # Get any existing values for that item.
@@ -115,5 +118,6 @@ class AITCController(object):
             RecordClass = self.RECORD_CLASSES[request.matchdict["collection"]]
         except KeyError:  # pragma nocover
             raise HTTPNotFound()
-        item = RecordClass(data)
+        # Don't error out if the database contains items with unknown fields.
+        item = RecordClass(data, ignore_unknown_fields=True)
         return item.abbreviate()

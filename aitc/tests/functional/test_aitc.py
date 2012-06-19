@@ -373,6 +373,7 @@ class TestAITC(AITCFunctionalTestCase):
         self.app.delete(self.root + "/apps/NONEXISTENT", status=404)
 
     def test_that_uploading_invalid_json_gives_a_400_response(self):
+        # Test that it fails for a variety of non-json-object inputs.
         id = origin_to_id("http://broken-app.com")
         data = "NOT JSON"
         self.app.put(self.root + "/apps/" + id, data, status=415)
@@ -380,8 +381,13 @@ class TestAITC(AITCFunctionalTestCase):
         self.app.put_json(self.root + "/apps/" + id, data, status=400)
         data = ["NOT", "AN", "OBJECT"]
         self.app.put_json(self.root + "/apps/" + id, data, status=400)
-        data = {"invalid": "field"}
+        # Test that is fails for a variety of malformed inputs.
+        id = origin_to_id(TEST_APP_DATA["origin"])
+        # Fails with an additional, invalid field.
+        data = TEST_APP_DATA.copy()
+        data["invalid"] = "field"
         self.app.put_json(self.root + "/apps/" + id, data, status=400)
+        # Fails with a missing required field.
         data = TEST_APP_DATA.copy()
         data.pop("manifestPath")
         self.app.put_json(self.root + "/apps/" + id, data, status=400)
