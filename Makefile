@@ -47,6 +47,7 @@ all:	build
 
 build:
 	$(VIRTUALENV) --no-site-packages --distribute .
+	$(INSTALL) Distribute
 	$(INSTALL) MoPyTools
 	$(INSTALL) nose
 	$(INSTALL) coverage
