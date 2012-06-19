@@ -60,7 +60,7 @@ class AppRecord(Record):
     """Class for working with App record data."""
 
     FIELDS = set(("origin", "manifestPath", "installOrigin", "installedAt",
-                  "modifiedAt", "name", "deleted", "receipts"))
+                  "modifiedAt", "name", "hidden", "receipts"))
 
     def get_id(self):
         return origin_to_id(self["origin"])
@@ -105,9 +105,9 @@ class AppRecord(Record):
                 if not isinstance(receipt, basestring):
                     return False, "receipts must be a list of strings"
 
-            # Check that deleted, if present, is boolean true.
-            if self.get("deleted") not in (None, True):
-                return False, "deleted must be boolean true"
+            # Check that hidden, if present, is boolean true.
+            if self.get("hidden") not in (None, True):
+                return False, "hidden must be boolean true"
         except KeyError:
             return False, "missing field %r" % (field,)
 

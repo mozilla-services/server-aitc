@@ -36,9 +36,9 @@ class TestRecordHandling(unittest.TestCase):
         ok, error = app.validate()
         self.assertTrue(ok)
 
-        good_data_deleted = good_data.copy()
-        good_data_deleted["deleted"] = True
-        app = AppRecord(good_data_deleted)
+        good_data_hidden = good_data.copy()
+        good_data_hidden["hidden"] = True
+        app = AppRecord(good_data_hidden)
         ok, error = app.validate()
         self.assertTrue(ok)
 
@@ -79,7 +79,7 @@ class TestRecordHandling(unittest.TestCase):
         self.assertFalse(ok)
 
         bad_data = good_data.copy()
-        bad_data["deleted"] = "true"
+        bad_data["hidden"] = "true"
         app = AppRecord(bad_data)
         ok, error = app.validate()
         self.assertFalse(ok)
