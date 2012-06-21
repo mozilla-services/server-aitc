@@ -3,7 +3,7 @@ build:
 	virtualenv --no-site-packages .
 	ln -sf `python -c 'import M2Crypto; print M2Crypto.__file__' | xargs dirname`* ./lib/*/site-packages
 	bin/pip install https://github.com/mozilla-services/mozservices/tarball/master
-	bin/pip install funkload PyBrowserID repoze.who.plugins.macauth registry
+	bin/pip install funkload PyBrowserID repoze.who.plugins.macauth registry pyramid_macauth
 
 # run actual funkload bench (called from dist.sh over ssh)
 bench:
