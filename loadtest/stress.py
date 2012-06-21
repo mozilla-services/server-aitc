@@ -18,7 +18,7 @@ from funkload.utils import Data
 import macauthlib
 from webob import Request
 from browserid.tests.support import make_assertion
-from mozsvc.user.whoauth import SagradaMACAuthPlugin
+from mozsvc.user import SagradaAuthenticationPolicy
 
 
 VERSION = '1.0'
@@ -35,7 +35,7 @@ class StressTest(FunkLoadTestCase):
         except NoOptionError:
             self.token_server_url = None
             secrets_file = self.conf_get("main", "secrets_file")
-            self.auth_plugin = SagradaMACAuthPlugin(secrets_file=secrets_file)
+            self.auth_plugin = SagradaAuthenticationPolicy(secrets_file=secrets_file)
             nodes = self.conf_get("main", "endpoint_nodes").split("\n")
             nodes = [node.strip() for node in nodes]
             nodes = [node for node in nodes if not node.startswith("#")]
