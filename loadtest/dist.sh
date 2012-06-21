@@ -7,13 +7,13 @@ source_dir=$(dirname $0)
 trap "echo ==> 'killing bench runs'; xapply 'ssh %1 killall fl-run-bench' $workers" EXIT
 
 echo "==> killing existing bench runs"
-xapply "ssh %1 killall fl-run-bench 2\>/dev/null" $workers
+xapply -x "ssh %1 killall fl-run-bench 2\>/dev/null" $workers
 
 echo "==> syncing files to workers"
-xapply "rsync $source_dir/{StressTest.conf,stress.py,Makefile} %1:$dest_dir/" $workers
+xapply -x "rsync $source_dir/{StressTest.conf,stress.py,Makefile} %1:$dest_dir/" $workers
 
 echo "==> building virtualenvs"
-xapply "ssh %1 cd $dest_dir \; rm -f loadtest\*; make build" $workers
+xapply -x "ssh %1 cd $dest_dir \; rm -f loadtest\* \; make build" $workers
 
 echo "==> running load"
 while :; do
