@@ -20,7 +20,7 @@ cef==0.3
 cornice==0.7
 coverage==3.5.1
 docutils==0.8.1
-gevent==0.13.6
+gevent==0.13.7
 greenlet==0.3.4
 macauthlib==0.2
 metlog-py==0.9.1

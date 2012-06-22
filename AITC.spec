@@ -1,7 +1,7 @@
 %define name python26-aitc
 %define pythonname AITC
 %define version 1.2
-%define release 1
+%define release 2
 
 Summary: Apps-In-The-Cloud Storage server
 Name: %{name}
