@@ -135,7 +135,7 @@ class StressTest(FunkLoadTestCase):
             self.logi("synthesizing token for uid %s" % (uid,))
             endpoint_node = random.choice(self.endpoint_nodes)
             req = Request.blank(endpoint_node)
-            token, secret = self.auth_plugin.encode_mac_id(req, {"uid": uid})
+            token, secret = self.auth_plugin.encode_mac_id(req, uid)
             endpoint_url = endpoint_node + "/%s/%s" % (VERSION, uid)
         else:
             email = "user%s@loadtest.local" % (uid,)
