@@ -6,7 +6,8 @@ import os
 import re
 
 
-install_requires = ['SQLALchemy', 'unittest2', 'mozsvc', 'cornice']
+install_requires = ['SQLALchemy', 'unittest2', 'mozsvc', 'cornice',
+                    'metlog-py']
 
 entry_points = """
 [paste.app_factory]
