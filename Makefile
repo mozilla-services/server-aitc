@@ -15,9 +15,6 @@ PYPI2RPM = bin/pypi2rpm.py --index=$(PYPI)
 PYPIOPTIONS = -i $(PYPI)
 BUILDAPP = bin/buildapp
 BUILDRPMS = bin/buildrpms
-PYPI = http://pypi.python.org/simple
-PYPI2RPM = bin/pypi2rpm.py --index=$(PYPI)
-PYPIOPTIONS = -i $(PYPI)
 CHANNEL = dev
 RPM_CHANNEL = dev
 INSTALL = bin/pip install
@@ -69,16 +66,21 @@ cover:
 
 build_rpms:
 	$(BUILDRPMS) -c $(RPM_CHANNEL) $(PYPIOPTIONS) $(DEPS)
+	# Install cython for zmq-related builds.
+	bin/pip install cython
 	# PyZMQ sdist bundles don't play nice with pypi2rpm.
 	# We need to build from a checkout of the tag.
+	# Also install it into the build env so gevent_zeromq will build.
 	wget -O /tmp/pyzmq-2.1.11.tar.gz https://github.com/zeromq/pyzmq/tarball/v2.1.11
+	bin/pip install /tmp/pyzmq-2.1.11.tar.gz
 	$(PYPI2RPM) --dist-dir=$(CURDIR)/rpms /tmp/pyzmq-2.1.11.tar.gz
 	rm -f /tmp/pyzmq-2.1.11.tar.gz
-	# Install cython for gevent_zeromq build
-	bin/pip install cython
-	# We need some extra patches to gevent_zeromq
-	wget -O /tmp/master.zip https://github.com/tarekziade/gevent-zeromq/zipball/master --no-check-certificate
-	bin/pypi2rpm.py /tmp/master.zip --dist-dir=$(CURDIR)/rpms
+	# We need some extra patches to gevent_zeromq, use our forked version.
+	# Explicitly set PYTHONPATH for the build so that it picks up the local
+	# version of PyZMQ that we built above.
+	wget -O /tmp/master.zip https://github.com/mozilla-services/gevent-zeromq/zipball/master
+	bin/pip install /tmp/master.zip
+	PYTHONPATH=$(CURDIR)/lib/*/site-packages $(PYPI2RPM) /tmp/master.zip --dist-dir=$(CURDIR)/rpms
 	rm -f /tmp/master.zip
 	# The simplejson rpms conflict with a RHEL6 system package.
 	# Do a custom build so that they can overwrite rather than conflict.

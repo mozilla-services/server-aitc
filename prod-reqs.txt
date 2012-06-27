@@ -21,11 +21,11 @@ cornice==0.7
 coverage==3.5.1
 docutils==0.8.1
 gevent==0.13.7
+greenlet==0.4
 # The gevent_zeromq package doesn't work with pypi2rpm.
 # It works fine if built from a source checkout,
 # which is done directly in the makefile.
 #gevent_zeromq==0.2.1
-greenlet==0.3.4
 macauthlib==0.2
 metlog-py==0.9.2
 mozsvc==0.4
