@@ -78,10 +78,10 @@ build_rpms:
 	# We need some extra patches to gevent_zeromq, use our forked version.
 	# Explicitly set PYTHONPATH for the build so that it picks up the local
 	# version of PyZMQ that we built above.
-	wget -O /tmp/master.zip https://github.com/mozilla-services/gevent-zeromq/zipball/master
-	bin/pip install /tmp/master.zip
-	PYTHONPATH=$(CURDIR)/lib/*/site-packages $(PYPI2RPM) /tmp/master.zip --dist-dir=$(CURDIR)/rpms
-	rm -f /tmp/master.zip
+	wget -O /tmp/gevent-zeromq.zip https://github.com/mozilla-services/gevent-zeromq/zipball/532d3df654233f1b91e58a52be709475c0cd49da
+	bin/pip install /tmp/gevent-zeromq.zip
+	PYTHONPATH=$(CURDIR)/lib/*/site-packages $(PYPI2RPM) /tmp/gevent-zeromq.zip --dist-dir=$(CURDIR)/rpms
+	rm -f /tmp/gevent-zeromq.zip
 	# The simplejson rpms conflict with a RHEL6 system package.
 	# Do a custom build so that they can overwrite rather than conflict.
 	rm -f $(CURDIR)/rpms/python26-simplejson-2.4.0-1.x86_64.rpm
