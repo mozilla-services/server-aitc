@@ -53,6 +53,10 @@ build:
 	$(INSTALL) coverage
 	$(INSTALL) WebTest
 	$(BUILDAPP) -c $(CHANNEL) $(PYPIOPTIONS) $(DEPS)
+	# repoze.lru install seems to conflict with repoze.who.
+	# reinstalling fixes it
+	./bin/pip uninstall -y repoze.lru
+	$(INSTALL) repoze.lru
 
 update:
 	$(BUILDAPP) -c $(CHANNEL) $(PYPIOPTIONS) $(DEPS)
