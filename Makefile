@@ -74,6 +74,8 @@ build_rpms:
 	wget -O /tmp/pyzmq-2.1.11.tar.gz https://github.com/zeromq/pyzmq/tarball/v2.1.11
 	$(PYPI2RPM) --dist-dir=$(CURDIR)/rpms /tmp/pyzmq-2.1.11.tar.gz
 	rm -f /tmp/pyzmq-2.1.11.tar.gz
+	# Install cython for gevent_zeromq build
+	bin/pip install cython
 	# We need some extra patches to gevent_zeromq
 	wget -O /tmp/master.zip https://github.com/tarekziade/gevent-zeromq/zipball/master --no-check-certificate
 	bin/pypi2rpm.py /tmp/master.zip --dist-dir=$(CURDIR)/rpms
