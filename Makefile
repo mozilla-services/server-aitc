@@ -50,10 +50,6 @@ build:
 	$(INSTALL) coverage
 	$(INSTALL) WebTest
 	$(BUILDAPP) -c $(CHANNEL) $(PYPIOPTIONS) $(DEPS)
-	# repoze.lru install seems to conflict with repoze.who.
-	# reinstalling fixes it
-	./bin/pip uninstall -y repoze.lru
-	$(INSTALL) repoze.lru
 	# NOTE: we don't install pyzmq and related dependencies here.
 	# They're not needed by default and they require extra system-level
 	# libraries to build.  If you want them, run `make build_rpms` and

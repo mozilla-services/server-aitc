@@ -23,7 +23,7 @@ def includeme(config):
     # Include the basic mozsvc project dependencies.
     config.include("cornice")
     config.include("mozsvc")
-    config.include("mozsvc.user.whoauth")
+    config.include("mozsvc.user")
     # Re-use some framework stuff from syncstorage.
     config.include("syncstorage.tweens")
     config.include("syncstorage.storage")
