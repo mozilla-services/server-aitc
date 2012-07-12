@@ -7,7 +7,7 @@ import json
 from aitc.views import get_collection
 from metlog.senders import DebugCaptureSender
 from mozsvc.metrics import teardown_metlog
-from mozsvc.plugin import load_from_settings
+from mozsvc.metrics import load_metlog_client
 from mozsvc.tests.support import TestCase
 
 
@@ -24,8 +24,7 @@ class TestMetlog(TestCase):
 
     def get_configurator(self):
         config = super(TestMetlog, self).get_configurator()
-        metlog_wrapper = load_from_settings('metlog', config.registry.settings)
-        self.metlog = metlog_wrapper.client
+        self.metlog = load_metlog_client(config)
         config.registry['metlog'] = self.metlog
         config.include("aitc")
         return config

@@ -10,12 +10,14 @@ except ImportError:
     pass
 
 from mozsvc.config import get_configurator
-from mozsvc.plugin import load_from_settings
+from mozsvc.metrics import load_metlog_client
 
 from aitc.controller import AITCController
 
 
 def includeme(config):
+    # Ensure we have metlog loaded as early as possible.
+    load_metlog_client(config)
     # Add exception logging.
     # Putting it first prevents other things from converting errors
     # into HTTP responses before we get to see them.
@@ -35,8 +37,8 @@ def includeme(config):
 
 def main(global_config, **settings):
     config = get_configurator(global_config, **settings)
-    metlog_wrapper = load_from_settings('metlog', config.registry.settings)
-    config.registry['metlog'] = metlog_wrapper.client
+    # Ensure we have metlog loaded as early as possible.
+    load_metlog_client(config)
     config.begin()
     try:
         config.include(includeme)
