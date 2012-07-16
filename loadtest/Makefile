@@ -2,8 +2,7 @@
 build:
 	virtualenv --no-site-packages .
 	ln -sf `python -c 'import M2Crypto; print M2Crypto.__file__' | xargs dirname`* ./lib/*/site-packages
-	bin/pip install https://github.com/mozilla-services/mozservices/tarball/master
-	bin/pip install funkload PyBrowserID pyramid_macauth
+	bin/pip install funkload PyBrowserID mozsvc pyramid_macauth
 
 test:
 	bin/fl-run-test stress.py
