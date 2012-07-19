@@ -66,22 +66,6 @@ cover:
 
 build_rpms:
 	$(BUILDRPMS) -c $(RPM_CHANNEL) $(PYPIOPTIONS) $(DEPS)
-	# Install cython for zmq-related builds.
-	$(INSTALL) cython
-	# PyZMQ sdist bundles don't play nice with pypi2rpm.
-	# We need to build from a checkout of the tag.
-	# Also install it into the build env so gevent_zeromq will build.
-	wget -O /tmp/pyzmq-2.1.11.tar.gz https://github.com/zeromq/pyzmq/tarball/v2.1.11
-	bin/pip install /tmp/pyzmq-2.1.11.tar.gz
-	$(PYPI2RPM) --dist-dir=$(CURDIR)/rpms /tmp/pyzmq-2.1.11.tar.gz
-	rm -f /tmp/pyzmq-2.1.11.tar.gz
-	# We need some extra patches to gevent_zeromq, use our forked version.
-	# Explicitly set PYTHONPATH for the build so that it picks up the local
-	# version of PyZMQ that we built above.
-	wget -O /tmp/gevent-zeromq.zip https://github.com/mozilla-services/gevent-zeromq/zipball/532d3df654233f1b91e58a52be709475c0cd49da
-	bin/pip install /tmp/gevent-zeromq.zip
-	PYTHONPATH=$(CURDIR)/lib/*/site-packages $(PYPI2RPM) /tmp/gevent-zeromq.zip --dist-dir=$(CURDIR)/rpms
-	rm -f /tmp/gevent-zeromq.zip
 	# The simplejson rpms conflict with a RHEL6 system package.
 	# Do a custom build so that they can overwrite rather than conflict.
 	rm -f $(CURDIR)/rpms/python26-simplejson-2.4.0-1.x86_64.rpm
