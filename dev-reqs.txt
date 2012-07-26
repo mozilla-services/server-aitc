@@ -22,7 +22,7 @@ docutils==0.8.1
 gevent==0.13.7
 greenlet==0.3.4
 macauthlib==0.3
-metlog-py==0.9.3
+metlog-py==0.9.4
 mozsvc==0.5
 ordereddict==1.1
 pylibmc==1.2.3
