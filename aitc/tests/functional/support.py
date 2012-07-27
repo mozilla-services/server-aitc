@@ -4,10 +4,10 @@
 
 from syncstorage.tests.functional.support import StorageFunctionalTestCase
 
+from aitc.tests.support import AITCTestCase
 
-class AITCFunctionalTestCase(StorageFunctionalTestCase):
 
-    def get_configurator(self):
-        config = super(AITCFunctionalTestCase, self).get_configurator()
-        config.include("aitc")
-        return config
+class AITCFunctionalTestCase(StorageFunctionalTestCase, AITCTestCase):
+    # There's nothing else to do here.
+    # We just want to mix in the updated get_configurator from AITCTestCase.
+    pass

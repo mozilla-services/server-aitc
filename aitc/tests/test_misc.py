@@ -4,19 +4,19 @@
 
 import os
 import sys
-import unittest
 import StringIO
 from runpy import run_module
 
 from syncstorage.tests.support import restore_env
 
 import aitc
+from aitc.tests.support import AITCTestCase
 
 
 TEST_INI_FILE = os.path.join(os.path.dirname(__file__), "tests.ini")
 
 
-class TestMisc(unittest.TestCase):
+class TestMisc(AITCTestCase):
     """Suite of miscellaneous tests that increase line coverage.
 
     These tests don't really test any functionality, they just run
