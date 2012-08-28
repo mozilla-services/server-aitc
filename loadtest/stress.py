@@ -56,6 +56,7 @@ class StressTest(FunkLoadTestCase):
             result = super(StressTest, self).get(url, *args, **kwds)
         except Exception, e:
             self.logi("    FAIL: " + str(e))
+            raise
         else:
             self.logi("    OK: " + str(result))
             return result
@@ -66,6 +67,7 @@ class StressTest(FunkLoadTestCase):
             result = super(StressTest, self).put(url, *args, **kwds)
         except Exception, e:
             self.logi("    FAIL: " + str(e))
+            raise
         else:
             self.logi("    OK: " + str(result))
             return result
