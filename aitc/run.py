@@ -14,14 +14,16 @@ from paste.deploy import loadapp
 # setting up the egg cache to a place where apache can write
 os.environ['PYTHON_EGG_CACHE'] = '/tmp/python-eggs'
 
-# the ini file is grabbed at its production place
-# unless force via an environ variable
+# Use the .ini file specified in the environment if given.
+# Otherwise use the production .ini file if available.
 ini_file = os.environ.get("AITC_INI_FILE")
 if ini_file is None:
-    ini_file = os.path.join('/etc', 'aitc', 'production.ini')
+    ini_file = os.path.join('/etc', 'mozilla-services',
+                            'aitc', 'production.ini')
     if not os.path.exists(ini_file):
-        ini_file = os.path.join(os.path.dirname(__file__),
-                                "tests", "tests.ini")
+        msg = "Config file %s not found; please set AITC_INI_FILE to "\
+              "the path of your desired config file."
+        raise RuntimeError(msg % (ini_file,))
 ini_file = os.path.abspath(ini_file)
 
 # setting up logging
